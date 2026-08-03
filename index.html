@@ -15,7 +15,7 @@
             --green: #22c55e;
             --red: #ef4444;
             --blue: #3b82f6;
-            --highlight-blue: #38bdf8; /* Schönes Hellblau für 140+ */
+            --highlight-yellow: #facc15; /* Knalliges Gelb für 140+ */
         }
 
         body {
@@ -234,14 +234,14 @@
         .score-box span { display: block; font-size: 0.65rem; color: var(--text-muted); }
         .score-box strong { font-size: 0.95rem; color: var(--text-main); }
 
-        /* Spezielle Hellblaue Hervorhebung für 140+ */
+        /* Spezielle Gelbe Hervorhebung für 140+ */
         .score-box.highlight-140 {
-            background: rgba(56, 189, 248, 0.15);
-            border: 1px solid rgba(56, 189, 248, 0.4);
+            background: rgba(250, 204, 21, 0.15);
+            border: 1px solid rgba(250, 204, 21, 0.4);
             border-radius: 8px;
         }
-        .score-box.highlight-140 span { color: #bae6fd; font-weight: bold; }
-        .score-box.highlight-140 strong { color: var(--highlight-blue); font-size: 1.1rem; }
+        .score-box.highlight-140 span { color: #fef08a; font-weight: bold; }
+        .score-box.highlight-140 strong { color: var(--highlight-yellow); font-size: 1.1rem; }
 
         .back-btn {
             background-color: transparent;
@@ -505,8 +505,9 @@
         let legRate = totalMainLegs > 0 ? ((mainStats.legsWon / totalMainLegs) * 100).toFixed(1) : 0;
         let avgMain = mainStats.avgs.length > 0 ? (mainStats.avgs.reduce((a,b)=>a+b, 0) / mainStats.avgs.length).toFixed(2) : "0.00";
         
+        // Darts pro gewonnenes Leg ohne Nachkommastelle gerundet
         let dartsPerLeg = (mainStats.legsWon > 0 && mainStats.totalDartsWonLegs > 0) 
-            ? (mainStats.totalDartsWonLegs / mainStats.legsWon).toFixed(1) 
+            ? Math.round(mainStats.totalDartsWonLegs / mainStats.legsWon) 
             : "-";
 
         let subHtml = "";
