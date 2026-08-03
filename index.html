@@ -297,10 +297,10 @@
     // Konfiguration der Spieler & Passwörter
     const playersData = {
         "admin": { name: "Jürgen Schützendorf", mainTeam: "3. Mannschaft", password: "admin", isAdmin: true },
+        "juergen_s": { name: "Jürgen Schützendorf", mainTeam: "3. Mannschaft", password: "2807", isAdmin: false },
         "weichert_n": { name: "Niklas Weichert", mainTeam: "3. Mannschaft", password: "123", isAdmin: false },
         "senger_w": { name: "Wolfram Senger", mainTeam: "3. Mannschaft", password: "123", isAdmin: false },
-        "patrick_s": { name: "Patrick Seitz", mainTeam: "1. Mannschaft", password: "4711", isAdmin: false },
-        "juergen_s": { name: "Jürgen Schützendorf", mainTeam: "3. Mannschaft", password: "2807", isAdmin: false }
+        "patrick_s": { name: "Patrick Seitz", mainTeam: "1. Mannschaft", password: "4711", isAdmin: false }
     };
 
     let globalMatchesData = [];
@@ -318,7 +318,7 @@
                 groupPlayers.forEach(([key, player]) => {
                     let option = document.createElement("option");
                     option.value = key;
-                    option.textContent = player.name;
+                    option.textContent = player.name + (player.isAdmin ? " (Admin)" : "");
                     optgroup.appendChild(option);
                 });
                 select.appendChild(optgroup);
@@ -395,7 +395,9 @@
         }
 
         const player = playersData[selectedKey];
-        if (passwordInput === player.password || passwordInput === "admin") {
+        
+        // Prüfung: Entweder stimmt das persönliche Passwort oder es ist der Admin-Login mit Admin-Passwort
+        if (passwordInput === player.password || (player.isAdmin && passwordInput === "admin")) {
             errorDiv.style.display = "none";
             document.getElementById("loginCard").style.display = "none";
             document.getElementById("dashboardView").style.display = "block";
@@ -507,7 +509,7 @@
         let legRate = totalMainLegs > 0 ? ((mainStats.legsWon / totalMainLegs) * 100).toFixed(1) : 0;
         let avgMain = mainStats.avgs.length > 0 ? (mainStats.avgs.reduce((a,b)=>a+b, 0) / mainStats.avgs.length).toFixed(2) : "0.00";
         
-        // Darts pro gewonnenes Leg ohne Nachkommastelle gerundet
+        // Darts pro gewonnenes Leg als ganze Zahl gerundet
         let dartsPerLeg = (mainStats.legsWon > 0 && mainStats.totalDartsWonLegs > 0) 
             ? Math.round(mainStats.totalDartsWonLegs / mainStats.legsWon) 
             : "-";
