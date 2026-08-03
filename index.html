@@ -15,8 +15,8 @@
             --green: #22c55e;
             --red: #ef4444;
             --blue: #3b82f6;
-            --highlight-yellow: #facc15; /* Knalliges Gelb für 140+ */
-            --highlight-green-bg: rgba(34, 197, 94, 0.2); /* Sattes Grün für Bestes Short Leg */
+            --highlight-yellow: #facc15;
+            --highlight-green-bg: rgba(34, 197, 94, 0.2);
             --highlight-green-text: #4ade80;
         }
 
@@ -36,7 +36,6 @@
             max-width: 600px;
         }
 
-        /* App Sync / Datenpflege Info */
         .app-sync-info {
             text-align: center;
             font-size: 0.8rem;
@@ -48,7 +47,6 @@
             border-radius: 8px;
         }
 
-        /* Login Box */
         .login-card {
             background-color: var(--card-bg);
             border: 1px solid var(--border-color);
@@ -87,7 +85,6 @@
         }
         .btn:hover { opacity: 0.9; }
 
-        /* Dashboard / Karten Container */
         #dashboardView {
             display: none;
         }
@@ -107,7 +104,6 @@
             color: var(--accent-orange);
         }
 
-        /* Admin Sektions-Überschriften */
         .team-section-title {
             font-size: 1.1rem;
             font-weight: 800;
@@ -119,7 +115,6 @@
             padding-left: 8px;
         }
 
-        /* Spielerkarte Styling */
         .player-card {
             background-color: var(--card-bg);
             border: 1px solid var(--border-color);
@@ -156,7 +151,6 @@
             margin-top: 6px;
         }
 
-        /* Leistungs-Box */
         .stats-section {
             background-color: rgba(15, 23, 42, 0.6);
             border: 1px solid var(--border-color);
@@ -205,7 +199,6 @@
         .win-bilanz { color: var(--green); }
         .loss-bilanz { color: var(--red); }
 
-        /* Progress Bar */
         .progress-bar {
             width: 100%;
             height: 6px;
@@ -217,7 +210,6 @@
         .progress-fill-green { height: 100%; background-color: var(--green); }
         .progress-fill-blue { height: 100%; background-color: var(--blue); }
 
-        /* Highlights & Scores Grid (4 Spalten oben) */
         .highlights-box {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
@@ -233,7 +225,6 @@
         .highlight-item span { display: block; font-size: 0.65rem; color: var(--text-muted); }
         .highlight-item strong { font-size: 1rem; color: var(--accent-orange); }
 
-        /* Short-Legs Badges Container */
         .shortlegs-container {
             display: flex;
             flex-wrap: wrap;
@@ -252,7 +243,6 @@
             font-weight: bold;
         }
 
-        /* Hervorhebung für das beste Short Leg */
         .shortleg-badge.best-shortleg {
             background: var(--highlight-green-bg);
             border: 1px solid rgba(74, 222, 128, 0.5);
@@ -260,7 +250,6 @@
             font-size: 0.95rem;
         }
 
-        /* Scores Grid (4 Spalten unten) */
         .scores-grid {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
@@ -275,7 +264,6 @@
         .score-box span { display: block; font-size: 0.65rem; color: var(--text-muted); }
         .score-box strong { font-size: 0.95rem; color: var(--text-main); }
 
-        /* Spezielle Gelbe Hervorhebung für 140+ */
         .score-box.highlight-140 {
             background: rgba(250, 204, 21, 0.15);
             border: 1px solid rgba(250, 204, 21, 0.4);
@@ -299,7 +287,6 @@
 <body>
 
 <div class="container">
-    <!-- Datenpflege Info -->
     <div class="app-sync-info">⚡ Datenpflege & Bereitstellung: Jürgen Schützendorf</div>
 
     <!-- LOGIN FORMULAR -->
@@ -335,7 +322,10 @@
 </div>
 
 <script>
-    // Konfiguration der Spieler & Passwörter
+    // WICHTIG: Erhöhe diese Versionsnummer (z.B. von "1.0" auf "1.1"), 
+    // wenn du Änderungen am Code machst und diesen auf dem Server hochlädst.
+    const APP_VERSION = "1.0"; 
+
     const playersData = {
         "admin": { name: "Jürgen Schützendorf", mainTeam: "3. Mannschaft", password: "admin", isAdmin: true },
         "juergen_s": { name: "Jürgen Schützendorf", mainTeam: "3. Mannschaft", password: "2807", isAdmin: false },
@@ -345,9 +335,11 @@
     };
 
     let globalMatchesData = [];
-    let isDataLoaded = false;
 
     window.onload = async function() {
+        // Prüfen, ob eine neue Version vorliegt (vergleicht mit dem Browser-Cache)
+        checkAppVersion();
+
         const select = document.getElementById("playerSelect");
         const teams = ["3. Mannschaft", "1. Mannschaft", "2. Mannschaft", "4. Mannschaft", "Admin"];
         
@@ -366,7 +358,7 @@
             }
         });
 
-        // Tabellen-GIDs laden
+        // CSV-Daten laden
         const teamGids = [
             { name: "1. Mannschaft", gid: "2097702849" },
             { name: "2. Mannschaft", gid: "483923517" },
@@ -387,8 +379,26 @@
                 console.log(`Konnte Daten für ${team.name} nicht laden:`, err);
             }
         }
-        isDataLoaded = true;
+
+        // Prüfen ob User bereits eingeloggt war (Session beibehalten)
+        const savedLoginKey = sessionStorage.getItem("tvk_logged_in_user");
+        if (savedLoginKey && playersData[savedLoginKey]) {
+            document.getElementById("loginCard").style.display = "none";
+            document.getElementById("dashboardView").style.display = "block";
+            renderDashboard(savedLoginKey);
+        }
     };
+
+    function checkAppVersion() {
+        const storedVersion = localStorage.getItem("tvk_app_version");
+        if (!storedVersion) {
+            localStorage.setItem("tvk_app_version", APP_VERSION);
+        } else if (storedVersion !== APP_VERSION) {
+            localStorage.setItem("tvk_app_version", APP_VERSION);
+            // Cache leeren und Seite neu laden, damit die neueste Datei geladen wird
+            window.location.reload(true);
+        }
+    }
 
     function parseCSV(text, teamName) {
         let lines = text.split("\n");
@@ -439,6 +449,10 @@
         
         if (passwordInput === player.password || (player.isAdmin && passwordInput === "admin")) {
             errorDiv.style.display = "none";
+            
+            // Login-Zustand im Browser speichern
+            sessionStorage.setItem("tvk_logged_in_user", selectedKey);
+
             document.getElementById("loginCard").style.display = "none";
             document.getElementById("dashboardView").style.display = "block";
             
@@ -458,7 +472,6 @@
 
         if (loggedInPlayer.isAdmin) {
             titleEl.textContent = "Admin-Dashboard — Alle Spieler nach Mannschaften";
-            
             const teamOrder = ["1. Mannschaft", "2. Mannschaft", "3. Mannschaft", "4. Mannschaft"];
             
             teamOrder.forEach(teamName => {
@@ -478,7 +491,6 @@
                     });
                 }
             });
-
         } else {
             titleEl.textContent = "Deine Spielerkarte";
             container.appendChild(createPlayerCardElement(loggedInKey));
@@ -505,7 +517,6 @@
                 let currentStats = isSub ? subStats : mainStats;
 
                 if (isSub) subStats.teamName = match.mannschaft;
-
                 currentStats.matches++;
 
                 let matchLegsWon = 0;
@@ -559,7 +570,6 @@
             }
         });
 
-        // Alle Short Legs aufsteigend sortieren
         mainStats.allShortLegs.sort((a, b) => a - b);
         let bestShortLeg = mainStats.allShortLegs.length > 0 ? Math.min(...mainStats.allShortLegs) : 999;
 
@@ -572,7 +582,6 @@
             ? Math.round(mainStats.totalDartsWonLegs / mainStats.legsWon) 
             : "-";
 
-        // HTML für Short-Legs Badges erzeugen
         let shortLegsHtml = "-";
         if (mainStats.allShortLegs.length > 0) {
             shortLegsHtml = `<div class="shortlegs-container">` + 
@@ -668,6 +677,9 @@
     }
 
     function logout() {
+        // Login-Zustand löschen
+        sessionStorage.removeItem("tvk_logged_in_user");
+
         document.getElementById("dashboardView").style.display = "none";
         document.getElementById("loginCard").style.display = "block";
         document.getElementById("playerPassword").value = "";
