@@ -1,0 +1,722 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TV Kapellen 1919 e.V. — Spieler-Dashboard</title>
+    <style>
+        :root {
+            --bg-dark: #0f172a;
+            --card-bg: #1e293b;
+            --border-color: #334155;
+            --accent-orange: #f59e0b;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --green: #22c55e;
+            --red: #ef4444;
+            --blue: #3b82f6;
+            --highlight-yellow: #facc15;
+            --highlight-green-bg: rgba(34, 197, 94, 0.2);
+            --highlight-green-text: #4ade80;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            min-height: 100vh;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 600px;
+        }
+
+        .app-sync-info {
+            text-align: center;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            margin-bottom: 15px;
+            background: rgba(30, 41, 59, 0.5);
+            border: 1px dashed var(--border-color);
+            padding: 8px;
+            border-radius: 8px;
+        }
+
+        .login-card {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 30px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+            text-align: center;
+            margin-top: 40px;
+        }
+
+        .login-card h2 { margin-top: 0; color: var(--accent-orange); }
+        .form-group { margin-bottom: 20px; text-align: left; }
+        .form-group label { display: block; font-size: 0.85rem; color: var(--text-muted); margin-bottom: 6px; }
+        .form-control {
+            width: 100%;
+            padding: 12px;
+            background-color: var(--bg-dark);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            color: var(--text-main);
+            font-size: 1rem;
+            box-sizing: border-box;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 12px;
+            background-color: var(--accent-orange);
+            color: #000;
+            border: none;
+            border-radius: 8px;
+            font-weight: bold;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: opacity 0.2s;
+        }
+        .btn:hover { opacity: 0.9; }
+
+        #dashboardView {
+            display: none;
+        }
+
+        .dashboard-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 15px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .dashboard-header h1 {
+            font-size: 1.4rem;
+            margin: 0;
+            color: var(--accent-orange);
+        }
+
+        .header-buttons {
+            display: flex;
+            gap: 8px;
+        }
+
+        .team-section-title {
+            font-size: 1.1rem;
+            font-weight: 800;
+            color: var(--accent-orange);
+            margin: 25px 0 12px 4px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border-left: 3px solid var(--accent-orange);
+            padding-left: 8px;
+        }
+
+        .player-card {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 20px;
+            padding: 24px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.4);
+            margin-bottom: 24px;
+        }
+
+        .player-header {
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 16px;
+            margin-bottom: 20px;
+        }
+
+        .player-name {
+            font-size: 1.6rem;
+            font-weight: 800;
+            margin: 0 0 4px 0;
+            letter-spacing: -0.5px;
+        }
+
+        .player-club {
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: var(--accent-orange);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .player-meta {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            margin-top: 6px;
+        }
+
+        .stats-section {
+            background-color: rgba(15, 23, 42, 0.6);
+            border: 1px solid var(--border-color);
+            border-radius: 14px;
+            padding: 18px;
+            margin-bottom: 16px;
+        }
+
+        .stats-title {
+            font-size: 0.95rem;
+            font-weight: 700;
+            color: var(--accent-orange);
+            margin-bottom: 14px;
+            border-bottom: 1px dashed var(--border-color);
+            padding-bottom: 6px;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .stat-box label {
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            letter-spacing: 0.5px;
+            display: block;
+            margin-bottom: 4px;
+        }
+
+        .stat-value {
+            font-size: 1.4rem;
+            font-weight: bold;
+        }
+
+        .stat-value.highlight-bg {
+            background-color: var(--accent-orange);
+            color: #000;
+            display: inline-block;
+            padding: 2px 10px;
+            border-radius: 6px;
+        }
+
+        .win-bilanz { color: var(--green); }
+        .loss-bilanz { color: var(--red); }
+
+        .progress-bar {
+            width: 100%;
+            height: 6px;
+            background-color: var(--border-color);
+            border-radius: 3px;
+            margin-top: 8px;
+            overflow: hidden;
+        }
+        .progress-fill-green { height: 100%; background-color: var(--green); }
+        .progress-fill-blue { height: 100%; background-color: var(--blue); }
+
+        .highlights-box {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 8px;
+            background: rgba(245, 158, 11, 0.05);
+            border: 1px solid rgba(245, 158, 11, 0.2);
+            border-radius: 12px;
+            padding: 12px;
+            margin-top: 16px;
+            text-align: center;
+        }
+
+        .highlight-item span { display: block; font-size: 0.65rem; color: var(--text-muted); }
+        .highlight-item strong { font-size: 1rem; color: var(--accent-orange); }
+
+        .shortlegs-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px;
+            justify-content: center;
+            margin-top: 2px;
+        }
+
+        .shortleg-badge {
+            font-size: 0.85rem;
+            padding: 1px 6px;
+            border-radius: 4px;
+            background: rgba(30, 41, 59, 0.8);
+            border: 1px solid var(--border-color);
+            color: var(--text-main);
+            font-weight: bold;
+        }
+
+        .shortleg-badge.best-shortleg {
+            background: var(--highlight-green-bg);
+            border: 1px solid rgba(74, 222, 128, 0.5);
+            color: var(--highlight-green-text);
+            font-size: 0.95rem;
+        }
+
+        .scores-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 8px;
+            margin-top: 12px;
+            text-align: center;
+            background: rgba(30, 41, 59, 0.8);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 10px;
+        }
+        .score-box span { display: block; font-size: 0.65rem; color: var(--text-muted); }
+        .score-box strong { font-size: 0.95rem; color: var(--text-main); }
+
+        .score-box.highlight-140 {
+            background: rgba(250, 204, 21, 0.15);
+            border: 1px solid rgba(250, 204, 21, 0.4);
+            border-radius: 8px;
+        }
+        .score-box.highlight-140 span { color: #fef08a; font-weight: bold; }
+        .score-box.highlight-140 strong { color: var(--highlight-yellow); font-size: 1.1rem; }
+
+        .action-btn {
+            background-color: transparent;
+            border: 1px solid var(--border-color);
+            color: var(--text-muted);
+            padding: 8px 14px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            transition: all 0.2s;
+        }
+        .action-btn:hover { color: var(--text-main); border-color: var(--text-main); background: rgba(255,255,255,0.05); }
+        .action-btn.refresh-btn { color: var(--accent-orange); border-color: rgba(245, 158, 11, 0.4); }
+        .action-btn.refresh-btn:hover { background: rgba(245, 158, 11, 0.1); border-color: var(--accent-orange); }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="app-sync-info">⚡ Datenpflege & Bereitstellung: Jürgen Schützendorf</div>
+
+    <!-- LOGIN FORMULAR -->
+    <div id="loginCard" class="login-card">
+        <h2>Spieler-Login</h2>
+        <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 20px;">Bitte wähle deinen Namen aus und gib dein Passwort ein.</p>
+        
+        <div class="form-group">
+            <label for="playerSelect">Spieler / Mannschaft</label>
+            <select id="playerSelect" class="form-control">
+                <option value="">-- Bitte wählen --</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label for="playerPassword">Passwort</label>
+            <input type="password" id="playerPassword" class="form-control" placeholder="Passwort eingeben...">
+        </div>
+
+        <button class="btn" onclick="handleLogin()">Einloggen</button>
+        <div id="loginError" style="color: var(--red); font-size: 0.8rem; margin-top: 10px; display: none;">Falsches Passwort!</div>
+    </div>
+
+    <!-- DASHBOARD ANSICHT -->
+    <div id="dashboardView">
+        <div class="dashboard-header">
+            <h1 id="dashboardTitle">Übersicht</h1>
+            <div class="header-buttons">
+                <button id="refreshBtn" class="action-btn refresh-btn" onclick="refreshData()">🔄 Aktualisieren</button>
+                <button class="action-btn" onclick="logout()">Abmelden</button>
+            </div>
+        </div>
+        
+        <div id="cardsContainer"></div>
+    </div>
+</div>
+
+<script>
+    const APP_VERSION = "1.0"; 
+
+    const playersData = {
+        "admin": { name: "Jürgen Schützendorf", mainTeam: "3. Mannschaft", password: "admin", isAdmin: true },
+        "juergen_s": { name: "Jürgen Schützendorf", mainTeam: "3. Mannschaft", password: "2807", isAdmin: false },
+        "weichert_n": { name: "Niklas Weichert", mainTeam: "3. Mannschaft", password: "123", isAdmin: false },
+        "senger_w": { name: "Wolfram Senger", mainTeam: "3. Mannschaft", password: "123", isAdmin: false },
+        "patrick_s": { name: "Patrick Seitz", mainTeam: "1. Mannschaft", password: "4711", isAdmin: false },
+        "tim_s": { name: "Tim Siegel", mainTeam: "1. Mannschaft", password: "0000", isAdmin: false }
+    };
+
+    let globalMatchesData = [];
+
+    window.onload = async function() {
+        const savedLoginKey = sessionStorage.getItem("tvk_logged_in_user");
+        checkAppVersion();
+
+        populatePlayerDropdown();
+
+        // Daten beim Start laden
+        await fetchAllSheetData();
+
+        if (savedLoginKey && playersData[savedLoginKey]) {
+            document.getElementById("loginCard").style.display = "none";
+            document.getElementById("dashboardView").style.display = "block";
+            renderDashboard(savedLoginKey);
+        }
+    };
+
+    function populatePlayerDropdown() {
+        const select = document.getElementById("playerSelect");
+        select.innerHTML = '<option value="">-- Bitte wählen --</option>';
+        const teams = ["3. Mannschaft", "1. Mannschaft", "2. Mannschaft", "4. Mannschaft", "Admin"];
+        
+        teams.forEach(teamName => {
+            const groupPlayers = Object.entries(playersData).filter(([key, p]) => p.mainTeam === teamName);
+            if (groupPlayers.length > 0) {
+                let optgroup = document.createElement("optgroup");
+                optgroup.label = teamName === "Admin" ? "Administration" : teamName;
+                groupPlayers.forEach(([key, player]) => {
+                    let option = document.createElement("option");
+                    option.value = key;
+                    option.textContent = player.name + (player.isAdmin ? " (Admin)" : "");
+                    optgroup.appendChild(option);
+                });
+                select.appendChild(optgroup);
+            }
+        });
+    }
+
+    async function fetchAllSheetData() {
+        globalMatchesData = [];
+        const teamGids = [
+            { name: "1. Mannschaft", gid: "2097702849" },
+            { name: "2. Mannschaft", gid: "483923517" },
+            { name: "3. Mannschaft", gid: "0" },
+            { name: "4. Mannschaft", gid: "1132963048" }
+        ];
+
+        for (const team of teamGids) {
+            const pubHtmlUrl = `https://docs.google.com/spreadsheets/d/e/2PACX-1vTdTOUA5sqMlTVxxUZWLn-ce3HNDvCbLfmLZIgT7EKJ0tYAT3OqZhx3T_BMvpgIwU5tDUxmjvUIRbHz/pubhtml?gid=${team.gid}&single=true`;
+            const csvUrl = pubHtmlUrl.replace("/pubhtml", "/pub").replace("?gid=", "?output=csv&gid=");
+
+            try {
+                const response = await fetch(csvUrl + "&t=" + new Date().getTime()); // Verhindert Browser-Caching der CSV
+                const csvText = await response.text();
+                const parsedRows = parseCSV(csvText, team.name);
+                globalMatchesData = globalMatchesData.concat(parsedRows);
+            } catch (err) {
+                console.log(`Konnte Daten für ${team.name} nicht laden:`, err);
+            }
+        }
+    }
+
+    // Manueller Aktualisieren-Button
+    async function refreshData() {
+        const btn = document.getElementById("refreshBtn");
+        btn.textContent = "⏳ Lade...";
+        btn.disabled = true;
+
+        await fetchAllSheetData();
+
+        const savedLoginKey = sessionStorage.getItem("tvk_logged_in_user");
+        if (savedLoginKey && playersData[savedLoginKey]) {
+            renderDashboard(savedLoginKey);
+        }
+
+        btn.textContent = "🔄 Aktualisieren";
+        btn.disabled = false;
+    }
+
+    function checkAppVersion() {
+        const storedVersion = localStorage.getItem("tvk_app_version");
+        if (!storedVersion) {
+            localStorage.setItem("tvk_app_version", APP_VERSION);
+        } else if (storedVersion !== APP_VERSION) {
+            localStorage.setItem("tvk_app_version", APP_VERSION);
+            window.location.reload(true);
+        }
+    }
+
+    function parseCSV(text, teamName) {
+        let lines = text.split("\n");
+        let result = [];
+        if (lines.length === 0) return result;
+
+        for (let i = 1; i < lines.length; i++) {
+            let line = lines[i].trim();
+            if (!line) continue;
+            
+            let cols = line.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
+
+            if (cols.length >= 13) {
+                result.push({
+                    mannschaft: teamName,
+                    spieltag: cols[0]?.replace(/"/g, ''),
+                    datum: cols[1]?.replace(/"/g, ''),
+                    gegnerMannschaft: cols[2]?.replace(/"/g, ''),
+                    block: cols[4]?.replace(/"/g, '').trim(),
+                    spielerKapellen: cols[5]?.replace(/"/g, '').trim(),
+                    ergebnisSpiel: cols[7]?.replace(/"/g, '').trim(),
+                    avg: cols[8]?.replace(/"/g, '').trim(),
+                    darts: cols[9]?.replace(/"/g, '').trim(),
+                    r180er: cols[11]?.replace(/"/g, '').trim(),
+                    hf: cols[12]?.replace(/"/g, '').trim(),
+                    s60: cols[13]?.replace(/"/g, '').trim(),
+                    s80: cols[14]?.replace(/"/g, '').trim(),
+                    s100: cols[15]?.replace(/"/g, '').trim(),
+                    s140: cols[16]?.replace(/"/g, '').trim()
+                });
+            }
+        }
+        return result;
+    }
+
+    function handleLogin() {
+        const selectedKey = document.getElementById("playerSelect").value;
+        const passwordInput = document.getElementById("playerPassword").value;
+        const errorDiv = document.getElementById("loginError");
+
+        if (!selectedKey || !playersData[selectedKey]) {
+            errorDiv.textContent = "Bitte wähle einen Spieler aus.";
+            errorDiv.style.display = "block";
+            return;
+        }
+
+        const player = playersData[selectedKey];
+        
+        if (passwordInput === player.password || (player.isAdmin && passwordInput === "admin")) {
+            errorDiv.style.display = "none";
+            sessionStorage.setItem("tvk_logged_in_user", selectedKey);
+
+            document.getElementById("loginCard").style.display = "none";
+            document.getElementById("dashboardView").style.display = "block";
+            
+            renderDashboard(selectedKey);
+        } else {
+            errorDiv.textContent = "Falsches Passwort!";
+            errorDiv.style.display = "block";
+        }
+    }
+
+    function renderDashboard(loggedInKey) {
+        const container = document.getElementById("cardsContainer");
+        container.innerHTML = "";
+
+        const loggedInPlayer = playersData[loggedInKey];
+        const titleEl = document.getElementById("dashboardTitle");
+
+        if (loggedInPlayer.isAdmin) {
+            titleEl.textContent = "Admin-Dashboard — Alle Spieler nach Mannschaften";
+            const teamOrder = ["1. Mannschaft", "2. Mannschaft", "3. Mannschaft", "4. Mannschaft"];
+            
+            teamOrder.forEach(teamName => {
+                const teamPlayerKeys = Object.keys(playersData).filter(key => {
+                    if (key === "admin") return false;
+                    return playersData[key].mainTeam === teamName;
+                });
+
+                if (teamPlayerKeys.length > 0) {
+                    let sectionTitle = document.createElement("div");
+                    sectionTitle.className = "team-section-title";
+                    sectionTitle.textContent = teamName;
+                    container.appendChild(sectionTitle);
+
+                    teamPlayerKeys.forEach(key => {
+                        container.appendChild(createPlayerCardElement(key));
+                    });
+                }
+            });
+        } else {
+            titleEl.textContent = "Deine Spielerkarte";
+            container.appendChild(createPlayerCardElement(loggedInKey));
+        }
+    }
+
+    function createPlayerCardElement(playerKey) {
+        const player = playersData[playerKey];
+        
+        let cardDiv = document.createElement("div");
+        cardDiv.className = "player-card";
+
+        let targetName = player.name;
+        let mainTeam = player.mainTeam;
+
+        let mainStats = { matches: 0, won: 0, lost: 0, legsWon: 0, legsLost: 0, avgs: [], highFinish: 0, count180: 0, allShortLegs: [], totalDartsWonLegs: 0, s60: 0, s80: 0, s100: 0, s140: 0 };
+        let subStats = { teamName: "", matches: 0, won: 0, lost: 0, legsWon: 0, legsLost: 0, avgs: [] };
+
+        globalMatchesData.forEach(match => {
+            if (match.block && match.block.toLowerCase().includes('doppel')) return;
+
+            if (match.spielerKapellen === targetName) {
+                let isSub = (!player.isAdmin && match.mannschaft !== mainTeam);
+                let currentStats = isSub ? subStats : mainStats;
+
+                if (isSub) subStats.teamName = match.mannschaft;
+                currentStats.matches++;
+
+                let matchLegsWon = 0;
+                if (match.ergebnisSpiel) {
+                    let parts = match.ergebnisSpiel.split(":");
+                    let gLegs = parseInt(parts[0]) || 0;
+                    let vLegs = parseInt(parts[1]) || 0;
+                    currentStats.legsWon += gLegs;
+                    currentStats.legsLost += vLegs;
+                    if (gLegs > vLegs) currentStats.won++;
+                    else currentStats.lost++;
+
+                    if (!isSub || player.isAdmin) {
+                        matchLegsWon = gLegs;
+                    }
+                }
+
+                if (match.avg) {
+                    currentStats.avgs.push(parseFloat(match.avg) || 0);
+                }
+
+                if (!isSub || player.isAdmin) {
+                    let matchDartsList = [];
+                    if (match.darts) {
+                        match.darts.split(",").forEach(dStr => {
+                            let d = parseInt(dStr.trim());
+                            if (!isNaN(d) && d > 0) {
+                                matchDartsList.push(d);
+                                if (d <= 18) {
+                                    mainStats.allShortLegs.push(d);
+                                }
+                            }
+                        });
+                    }
+
+                    if (matchLegsWon > 0 && matchDartsList.length > 0) {
+                        for (let i = 0; i < Math.min(matchLegsWon, matchDartsList.length); i++) {
+                            mainStats.totalDartsWonLegs += matchDartsList[i];
+                        }
+                    }
+
+                    mainStats.count180 += parseInt(match.r180er) || 0;
+                    let hf = parseInt(match.hf) || 0;
+                    if (hf > mainStats.highFinish) mainStats.highFinish = hf;
+
+                    mainStats.s60 += parseInt(match.s60) || 0;
+                    mainStats.s80 += parseInt(match.s80) || 0;
+                    mainStats.s100 += parseInt(match.s100) || 0;
+                    mainStats.s140 += parseInt(match.s140) || 0;
+                }
+            }
+        });
+
+        mainStats.allShortLegs.sort((a, b) => a - b);
+        let bestShortLeg = mainStats.allShortLegs.length > 0 ? Math.min(...mainStats.allShortLegs) : 999;
+
+        let totalMainLegs = mainStats.legsWon + mainStats.legsLost;
+        let winRate = mainStats.matches > 0 ? ((mainStats.won / mainStats.matches) * 100).toFixed(1) : 0;
+        let legRate = totalMainLegs > 0 ? ((mainStats.legsWon / totalMainLegs) * 100).toFixed(1) : 0;
+        let avgMain = mainStats.avgs.length > 0 ? (mainStats.avgs.reduce((a,b)=>a+b, 0) / mainStats.avgs.length).toFixed(2) : "0.00";
+        
+        let dartsPerLeg = (mainStats.legsWon > 0 && mainStats.totalDartsWonLegs > 0) 
+            ? Math.round(mainStats.totalDartsWonLegs / mainStats.legsWon) 
+            : "-";
+
+        let shortLegsHtml = "-";
+        if (mainStats.allShortLegs.length > 0) {
+            shortLegsHtml = `<div class="shortlegs-container">` + 
+                mainStats.allShortLegs.map(d => {
+                    let isBest = (d === bestShortLeg);
+                    return `<span class="shortleg-badge ${isBest ? 'best-shortleg' : ''}">${d}</span>`;
+                }).join('') + 
+                `</div>`;
+        }
+
+        let subHtml = "";
+        if (!player.isAdmin && subStats.matches > 0) {
+            let avgSub = subStats.avgs.length > 0 ? (subStats.avgs.reduce((a,b)=>a+b, 0) / subStats.avgs.length).toFixed(2) : "0.00";
+            subHtml = `
+                <div class="stats-section">
+                    <div class="stats-title">Aushilfseinsatz — ${subStats.teamName}</div>
+                    <div class="stats-grid">
+                        <div class="stat-box">
+                            <label>Matches</label>
+                            <div class="stat-value">${subStats.matches}</div>
+                            <label style="margin-top: 10px;">Bilanz (G : V)</label>
+                            <div class="stat-value"><span class="win-bilanz">${subStats.won}</span> : <span class="loss-bilanz">${subStats.lost}</span></div>
+                        </div>
+                        <div class="stat-box">
+                            <label>Avg</label>
+                            <div class="stat-value"><span class="highlight-bg">${avgSub}</span></div>
+                            <label style="margin-top: 10px;">Legs (Gew : Verl)</label>
+                            <div class="stat-value" style="font-size: 1.2rem; margin-top: 4px;">${subStats.legsWon} : ${subStats.legsLost}</div>
+                        </div>
+                    </div>
+                </div>`;
+        }
+
+        cardDiv.innerHTML = `
+            <div class="player-header">
+                <h2 class="player-name">${player.name}</h2>
+                <div class="player-club">TV Kapellen 1919 e.V.</div>
+                <div class="player-meta">Saison 2026/2027 &bull; Stammteam: ${player.mainTeam}</div>
+            </div>
+
+            <div class="stats-section">
+                <div class="stats-title">${player.isAdmin ? "Gesamtübersicht — Leistungsdaten (Alle Teams)" : player.mainTeam + " — Leistungsdaten"}</div>
+                <div class="stats-grid">
+                    <div class="stat-box">
+                        <label>Matches Gesamt</label>
+                        <div class="stat-value">${mainStats.matches}</div>
+                        <label style="margin-top: 10px;">Bilanz (G : V)</label>
+                        <div class="stat-value"><span class="win-bilanz">${mainStats.won}</span> : <span class="loss-bilanz">${mainStats.lost}</span></div>
+                        <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 4px;">Win-Rate (${winRate}%)</div>
+                        <div class="progress-bar"><div class="progress-fill-green" style="width: ${winRate}%;"></div></div>
+                    </div>
+                    <div class="stat-box">
+                        <label>Avg (Punkteschnitt)</label>
+                        <div class="stat-value"><span class="highlight-bg">${avgMain}</span></div>
+                        <label style="margin-top: 10px;">Legs (Gew : Verl)</label>
+                        <div class="stat-value" style="font-size: 1.2rem; margin-top: 4px;">${mainStats.legsWon} : ${mainStats.legsLost}</div>
+                        <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 4px;">Leg-Rate (${legRate}%)</div>
+                        <div class="progress-bar"><div class="progress-fill-blue" style="width: ${legRate}%;"></div></div>
+                    </div>
+                </div>
+            </div>
+
+            ${subHtml}
+
+            <div class="highlights-box">
+                <div class="highlight-item">
+                    <span>High-Finish</span>
+                    <strong>${mainStats.highFinish > 0 ? mainStats.highFinish : "-"}</strong>
+                </div>
+                <div class="highlight-item">
+                    <span>180er</span>
+                    <strong>${mainStats.count180}</strong>
+                </div>
+                <div class="highlight-item">
+                    <span>Darts / Leg (Gew.)</span>
+                    <strong>${dartsPerLeg}</strong>
+                </div>
+                <div class="highlight-item">
+                    <span>Short Legs (&le; 18)</span>
+                    <div style="margin-top: 2px;">${shortLegsHtml}</div>
+                </div>
+            </div>
+
+            <div class="scores-grid">
+                <div class="score-box"><span>60+</span><strong>${mainStats.s60}</strong></div>
+                <div class="score-box"><span>80+</span><strong>${mainStats.s80}</strong></div>
+                <div class="score-box"><span>100+</span><strong>${mainStats.s100}</strong></div>
+                <div class="score-box highlight-140"><span>140+</span><strong>${mainStats.s140}</strong></div>
+            </div>
+        `;
+
+        return cardDiv;
+    }
+
+    function logout() {
+        sessionStorage.removeItem("tvk_logged_in_user");
+        document.getElementById("dashboardView").style.display = "none";
+        document.getElementById("loginCard").style.display = "block";
+        document.getElementById("playerPassword").value = "";
+    }
+</script>
+
+</body>
+</html>
