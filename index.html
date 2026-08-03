@@ -96,12 +96,19 @@
             margin-bottom: 20px;
             border-bottom: 1px solid var(--border-color);
             padding-bottom: 15px;
+            flex-wrap: wrap;
+            gap: 10px;
         }
 
         .dashboard-header h1 {
             font-size: 1.4rem;
             margin: 0;
             color: var(--accent-orange);
+        }
+
+        .header-buttons {
+            display: flex;
+            gap: 8px;
         }
 
         .team-section-title {
@@ -272,7 +279,7 @@
         .score-box.highlight-140 span { color: #fef08a; font-weight: bold; }
         .score-box.highlight-140 strong { color: var(--highlight-yellow); font-size: 1.1rem; }
 
-        .back-btn {
+        .action-btn {
             background-color: transparent;
             border: 1px solid var(--border-color);
             color: var(--text-muted);
@@ -280,8 +287,11 @@
             border-radius: 6px;
             cursor: pointer;
             font-size: 0.85rem;
+            transition: all 0.2s;
         }
-        .back-btn:hover { color: var(--text-main); border-color: var(--text-main); }
+        .action-btn:hover { color: var(--text-main); border-color: var(--text-main); background: rgba(255,255,255,0.05); }
+        .action-btn.refresh-btn { color: var(--accent-orange); border-color: rgba(245, 158, 11, 0.4); }
+        .action-btn.refresh-btn:hover { background: rgba(245, 158, 11, 0.1); border-color: var(--accent-orange); }
     </style>
 </head>
 <body>
@@ -314,7 +324,10 @@
     <div id="dashboardView">
         <div class="dashboard-header">
             <h1 id="dashboardTitle">Übersicht</h1>
-            <button class="back-btn" onclick="logout()">Abmelden</button>
+            <div class="header-buttons">
+                <button id="refreshBtn" class="action-btn refresh-btn" onclick="refreshData()">🔄 Aktualisieren</button>
+                <button class="action-btn" onclick="logout()">Abmelden</button>
+            </div>
         </div>
         
         <div id="cardsContainer"></div>
@@ -322,9 +335,6 @@
 </div>
 
 <script>
-    // WICHTIG: Erhöhe diese Versionsnummer (z.B. von "1.0" auf "1.1"), 
-    // wenn du Code-Änderungen (Design, Logik) machst und diesen auf dem Server hochlädst.
-    // Für das Hinzufügen reiner Spieler musst du sie nicht erhöhen.
     const APP_VERSION = "1.0"; 
 
     const playersData = {
@@ -333,19 +343,30 @@
         "weichert_n": { name: "Niklas Weichert", mainTeam: "3. Mannschaft", password: "123", isAdmin: false },
         "senger_w": { name: "Wolfram Senger", mainTeam: "3. Mannschaft", password: "123", isAdmin: false },
         "patrick_s": { name: "Patrick Seitz", mainTeam: "1. Mannschaft", password: "4711", isAdmin: false },
-        "tim_s": { name: "Tim Siegel", mainTeam: "1. Mannschaft", password: "1234", isAdmin: false }
+        "tim_s": { name: "Tim Siegel", mainTeam: "1. Mannschaft", password: "0000", isAdmin: false }
     };
 
     let globalMatchesData = [];
 
     window.onload = async function() {
-        // 1. Session-Schlüssel zwischenspeichern
         const savedLoginKey = sessionStorage.getItem("tvk_logged_in_user");
-
-        // Prüfen, ob eine neue Version vorliegt
         checkAppVersion();
 
+        populatePlayerDropdown();
+
+        // Daten beim Start laden
+        await fetchAllSheetData();
+
+        if (savedLoginKey && playersData[savedLoginKey]) {
+            document.getElementById("loginCard").style.display = "none";
+            document.getElementById("dashboardView").style.display = "block";
+            renderDashboard(savedLoginKey);
+        }
+    };
+
+    function populatePlayerDropdown() {
         const select = document.getElementById("playerSelect");
+        select.innerHTML = '<option value="">-- Bitte wählen --</option>';
         const teams = ["3. Mannschaft", "1. Mannschaft", "2. Mannschaft", "4. Mannschaft", "Admin"];
         
         teams.forEach(teamName => {
@@ -362,8 +383,10 @@
                 select.appendChild(optgroup);
             }
         });
+    }
 
-        // 2. ERST die CSV-Daten komplett von Google Sheets laden...
+    async function fetchAllSheetData() {
+        globalMatchesData = [];
         const teamGids = [
             { name: "1. Mannschaft", gid: "2097702849" },
             { name: "2. Mannschaft", gid: "483923517" },
@@ -376,7 +399,7 @@
             const csvUrl = pubHtmlUrl.replace("/pubhtml", "/pub").replace("?gid=", "?output=csv&gid=");
 
             try {
-                const response = await fetch(csvUrl);
+                const response = await fetch(csvUrl + "&t=" + new Date().getTime()); // Verhindert Browser-Caching der CSV
                 const csvText = await response.text();
                 const parsedRows = parseCSV(csvText, team.name);
                 globalMatchesData = globalMatchesData.concat(parsedRows);
@@ -384,14 +407,24 @@
                 console.log(`Konnte Daten für ${team.name} nicht laden:`, err);
             }
         }
+    }
 
-        // 3. WENN die Daten vollständig geladen sind und der User eingeloggt war, JETZT erst das Dashboard anzeigen!
+    // Manueller Aktualisieren-Button
+    async function refreshData() {
+        const btn = document.getElementById("refreshBtn");
+        btn.textContent = "⏳ Lade...";
+        btn.disabled = true;
+
+        await fetchAllSheetData();
+
+        const savedLoginKey = sessionStorage.getItem("tvk_logged_in_user");
         if (savedLoginKey && playersData[savedLoginKey]) {
-            document.getElementById("loginCard").style.display = "none";
-            document.getElementById("dashboardView").style.display = "block";
             renderDashboard(savedLoginKey);
         }
-    };
+
+        btn.textContent = "🔄 Aktualisieren";
+        btn.disabled = false;
+    }
 
     function checkAppVersion() {
         const storedVersion = localStorage.getItem("tvk_app_version");
@@ -452,7 +485,6 @@
         
         if (passwordInput === player.password || (player.isAdmin && passwordInput === "admin")) {
             errorDiv.style.display = "none";
-            
             sessionStorage.setItem("tvk_logged_in_user", selectedKey);
 
             document.getElementById("loginCard").style.display = "none";
@@ -680,7 +712,6 @@
 
     function logout() {
         sessionStorage.removeItem("tvk_logged_in_user");
-
         document.getElementById("dashboardView").style.display = "none";
         document.getElementById("loginCard").style.display = "block";
         document.getElementById("playerPassword").value = "";
