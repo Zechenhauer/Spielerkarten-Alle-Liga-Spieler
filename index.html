@@ -16,6 +16,8 @@
             --red: #ef4444;
             --blue: #3b82f6;
             --highlight-yellow: #facc15; /* Knalliges Gelb für 140+ */
+            --highlight-green-bg: rgba(34, 197, 94, 0.2); /* Sattes Grün für Bestes Short Leg */
+            --highlight-green-text: #4ade80;
         }
 
         body {
@@ -231,6 +233,33 @@
         .highlight-item span { display: block; font-size: 0.65rem; color: var(--text-muted); }
         .highlight-item strong { font-size: 1rem; color: var(--accent-orange); }
 
+        /* Short-Legs Badges Container */
+        .shortlegs-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px;
+            justify-content: center;
+            margin-top: 2px;
+        }
+
+        .shortleg-badge {
+            font-size: 0.85rem;
+            padding: 1px 6px;
+            border-radius: 4px;
+            background: rgba(30, 41, 59, 0.8);
+            border: 1px solid var(--border-color);
+            color: var(--text-main);
+            font-weight: bold;
+        }
+
+        /* Hervorhebung für das beste Short Leg */
+        .shortleg-badge.best-shortleg {
+            background: var(--highlight-green-bg);
+            border: 1px solid rgba(74, 222, 128, 0.5);
+            color: var(--highlight-green-text);
+            font-size: 0.95rem;
+        }
+
         /* Scores Grid (4 Spalten unten) */
         .scores-grid {
             display: grid;
@@ -408,7 +437,6 @@
 
         const player = playersData[selectedKey];
         
-        // Prüfung: Entweder stimmt das persönliche Passwort oder es ist der Admin-Login mit Admin-Passwort
         if (passwordInput === player.password || (player.isAdmin && passwordInput === "admin")) {
             errorDiv.style.display = "none";
             document.getElementById("loginCard").style.display = "none";
@@ -431,24 +459,20 @@
         if (loggedInPlayer.isAdmin) {
             titleEl.textContent = "Admin-Dashboard — Alle Spieler nach Mannschaften";
             
-            // Feste Reihenfolge der Mannschaften für das Admin-Dashboard
             const teamOrder = ["1. Mannschaft", "2. Mannschaft", "3. Mannschaft", "4. Mannschaft"];
             
             teamOrder.forEach(teamName => {
-                // Alle Spieler filtern, die diesem Stammteam angehören (und den Admin-Account selbst ausschließen)
                 const teamPlayerKeys = Object.keys(playersData).filter(key => {
-                    if (key === "admin") return false; // Admin-Account überspringen, um Dubletten zu vermeiden
+                    if (key === "admin") return false;
                     return playersData[key].mainTeam === teamName;
                 });
 
                 if (teamPlayerKeys.length > 0) {
-                    // Mannschafts-Überschrift einfügen
                     let sectionTitle = document.createElement("div");
                     sectionTitle.className = "team-section-title";
                     sectionTitle.textContent = teamName;
                     container.appendChild(sectionTitle);
 
-                    // Spieler dieser Mannschaft rendern
                     teamPlayerKeys.forEach(key => {
                         container.appendChild(createPlayerCardElement(key));
                     });
@@ -470,7 +494,7 @@
         let targetName = player.name;
         let mainTeam = player.mainTeam;
 
-        let mainStats = { matches: 0, won: 0, lost: 0, legsWon: 0, legsLost: 0, avgs: [], highFinish: 0, count180: 0, bestShortLeg: 999, totalDartsWonLegs: 0, s60: 0, s80: 0, s100: 0, s140: 0 };
+        let mainStats = { matches: 0, won: 0, lost: 0, legsWon: 0, legsLost: 0, avgs: [], highFinish: 0, count180: 0, allShortLegs: [], totalDartsWonLegs: 0, s60: 0, s80: 0, s100: 0, s140: 0 };
         let subStats = { teamName: "", matches: 0, won: 0, lost: 0, legsWon: 0, legsLost: 0, avgs: [] };
 
         globalMatchesData.forEach(match => {
@@ -510,8 +534,8 @@
                             let d = parseInt(dStr.trim());
                             if (!isNaN(d) && d > 0) {
                                 matchDartsList.push(d);
-                                if (d <= 18 && d < mainStats.bestShortLeg) {
-                                    mainStats.bestShortLeg = d;
+                                if (d <= 18) {
+                                    mainStats.allShortLegs.push(d);
                                 }
                             }
                         });
@@ -535,6 +559,10 @@
             }
         });
 
+        // Alle Short Legs aufsteigend sortieren
+        mainStats.allShortLegs.sort((a, b) => a - b);
+        let bestShortLeg = mainStats.allShortLegs.length > 0 ? Math.min(...mainStats.allShortLegs) : 999;
+
         let totalMainLegs = mainStats.legsWon + mainStats.legsLost;
         let winRate = mainStats.matches > 0 ? ((mainStats.won / mainStats.matches) * 100).toFixed(1) : 0;
         let legRate = totalMainLegs > 0 ? ((mainStats.legsWon / totalMainLegs) * 100).toFixed(1) : 0;
@@ -543,6 +571,17 @@
         let dartsPerLeg = (mainStats.legsWon > 0 && mainStats.totalDartsWonLegs > 0) 
             ? Math.round(mainStats.totalDartsWonLegs / mainStats.legsWon) 
             : "-";
+
+        // HTML für Short-Legs Badges erzeugen
+        let shortLegsHtml = "-";
+        if (mainStats.allShortLegs.length > 0) {
+            shortLegsHtml = `<div class="shortlegs-container">` + 
+                mainStats.allShortLegs.map(d => {
+                    let isBest = (d === bestShortLeg);
+                    return `<span class="shortleg-badge ${isBest ? 'best-shortleg' : ''}">${d}</span>`;
+                }).join('') + 
+                `</div>`;
+        }
 
         let subHtml = "";
         if (!player.isAdmin && subStats.matches > 0) {
@@ -612,8 +651,8 @@
                     <strong>${dartsPerLeg}</strong>
                 </div>
                 <div class="highlight-item">
-                    <span>Bestes Short Leg</span>
-                    <strong>${mainStats.bestShortLeg < 999 ? mainStats.bestShortLeg + " Darts" : "-"}</strong>
+                    <span>Short Legs (&le; 18)</span>
+                    <div style="margin-top: 2px;">${shortLegsHtml}</div>
                 </div>
             </div>
 
