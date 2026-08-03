@@ -105,6 +105,18 @@
             color: var(--accent-orange);
         }
 
+        /* Admin Sektions-Überschriften */
+        .team-section-title {
+            font-size: 1.1rem;
+            font-weight: 800;
+            color: var(--accent-orange);
+            margin: 25px 0 12px 4px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border-left: 3px solid var(--accent-orange);
+            padding-left: 8px;
+        }
+
         /* Spielerkarte Styling */
         .player-card {
             background-color: var(--card-bg);
@@ -416,18 +428,37 @@
         const loggedInPlayer = playersData[loggedInKey];
         const titleEl = document.getElementById("dashboardTitle");
 
-        let keysToRender = [];
         if (loggedInPlayer.isAdmin) {
-            titleEl.textContent = "Admin-Dashboard — Alle Spieler im Überblick";
-            keysToRender = Object.keys(playersData);
+            titleEl.textContent = "Admin-Dashboard — Alle Spieler nach Mannschaften";
+            
+            // Feste Reihenfolge der Mannschaften für das Admin-Dashboard
+            const teamOrder = ["1. Mannschaft", "2. Mannschaft", "3. Mannschaft", "4. Mannschaft"];
+            
+            teamOrder.forEach(teamName => {
+                // Alle Spieler filtern, die diesem Stammteam angehören (und den Admin-Account selbst ausschließen)
+                const teamPlayerKeys = Object.keys(playersData).filter(key => {
+                    if (key === "admin") return false; // Admin-Account überspringen, um Dubletten zu vermeiden
+                    return playersData[key].mainTeam === teamName;
+                });
+
+                if (teamPlayerKeys.length > 0) {
+                    // Mannschafts-Überschrift einfügen
+                    let sectionTitle = document.createElement("div");
+                    sectionTitle.className = "team-section-title";
+                    sectionTitle.textContent = teamName;
+                    container.appendChild(sectionTitle);
+
+                    // Spieler dieser Mannschaft rendern
+                    teamPlayerKeys.forEach(key => {
+                        container.appendChild(createPlayerCardElement(key));
+                    });
+                }
+            });
+
         } else {
             titleEl.textContent = "Deine Spielerkarte";
-            keysToRender = [loggedInKey];
+            container.appendChild(createPlayerCardElement(loggedInKey));
         }
-
-        keysToRender.forEach(key => {
-            container.appendChild(createPlayerCardElement(key));
-        });
     }
 
     function createPlayerCardElement(playerKey) {
@@ -509,7 +540,6 @@
         let legRate = totalMainLegs > 0 ? ((mainStats.legsWon / totalMainLegs) * 100).toFixed(1) : 0;
         let avgMain = mainStats.avgs.length > 0 ? (mainStats.avgs.reduce((a,b)=>a+b, 0) / mainStats.avgs.length).toFixed(2) : "0.00";
         
-        // Darts pro gewonnenes Leg als ganze Zahl gerundet
         let dartsPerLeg = (mainStats.legsWon > 0 && mainStats.totalDartsWonLegs > 0) 
             ? Math.round(mainStats.totalDartsWonLegs / mainStats.legsWon) 
             : "-";
