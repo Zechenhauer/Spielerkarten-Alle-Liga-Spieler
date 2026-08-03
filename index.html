@@ -203,11 +203,11 @@
         .progress-fill-green { height: 100%; background-color: var(--green); }
         .progress-fill-blue { height: 100%; background-color: var(--blue); }
 
-        /* Highlights & Scores Grid */
+        /* Highlights & Scores Grid (4 Spalten oben) */
         .highlights-box {
             display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 10px;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 8px;
             background: rgba(245, 158, 11, 0.05);
             border: 1px solid rgba(245, 158, 11, 0.2);
             border-radius: 12px;
@@ -216,10 +216,10 @@
             text-align: center;
         }
 
-        .highlight-item span { display: block; font-size: 0.7rem; color: var(--text-muted); }
-        .highlight-item strong { font-size: 1.1rem; color: var(--accent-orange); }
+        .highlight-item span { display: block; font-size: 0.65rem; color: var(--text-muted); }
+        .highlight-item strong { font-size: 1rem; color: var(--accent-orange); }
 
-        /* Aufgeteilt in 4 Spalten ohne doppelte 180er */
+        /* Scores Grid (4 Spalten unten) */
         .scores-grid {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
@@ -435,7 +435,7 @@
         let targetName = player.name;
         let mainTeam = player.mainTeam;
 
-        let mainStats = { matches: 0, won: 0, lost: 0, legsWon: 0, legsLost: 0, avgs: [], highFinish: 0, count180: 0, bestShortLeg: 999, s60: 0, s80: 0, s100: 0, s140: 0 };
+        let mainStats = { matches: 0, won: 0, lost: 0, legsWon: 0, legsLost: 0, avgs: [], highFinish: 0, count180: 0, bestShortLeg: 999, totalDartsWonLegs: 0, s60: 0, s80: 0, s100: 0, s140: 0 };
         let subStats = { teamName: "", matches: 0, won: 0, lost: 0, legsWon: 0, legsLost: 0, avgs: [] };
 
         globalMatchesData.forEach(match => {
@@ -449,6 +449,7 @@
 
                 currentStats.matches++;
 
+                let matchLegsWon = 0;
                 if (match.ergebnisSpiel) {
                     let parts = match.ergebnisSpiel.split(":");
                     let gLegs = parseInt(parts[0]) || 0;
@@ -457,6 +458,10 @@
                     currentStats.legsLost += vLegs;
                     if (gLegs > vLegs) currentStats.won++;
                     else currentStats.lost++;
+
+                    if (!isSub || player.isAdmin) {
+                        matchLegsWon = gLegs;
+                    }
                 }
 
                 if (match.avg) {
@@ -464,13 +469,24 @@
                 }
 
                 if (!isSub || player.isAdmin) {
+                    let matchDartsList = [];
                     if (match.darts) {
                         match.darts.split(",").forEach(dStr => {
                             let d = parseInt(dStr.trim());
-                            if (!isNaN(d) && d > 0 && d <= 18 && d < mainStats.bestShortLeg) {
-                                mainStats.bestShortLeg = d;
+                            if (!isNaN(d) && d > 0) {
+                                matchDartsList.push(d);
+                                if (d <= 18 && d < mainStats.bestShortLeg) {
+                                    mainStats.bestShortLeg = d;
+                                }
                             }
                         });
+                    }
+
+                    // Darts für gewonnene Legs summieren (angenommen die eingetragenen Darts-Werte entsprechen den gewonnenen Legs der Reihe nach)
+                    if (matchLegsWon > 0 && matchDartsList.length > 0) {
+                        for (let i = 0; i < Math.min(matchLegsWon, matchDartsList.length); i++) {
+                            mainStats.totalDartsWonLegs += matchDartsList[i];
+                        }
                     }
 
                     mainStats.count180 += parseInt(match.r180er) || 0;
@@ -489,6 +505,11 @@
         let winRate = mainStats.matches > 0 ? ((mainStats.won / mainStats.matches) * 100).toFixed(1) : 0;
         let legRate = totalMainLegs > 0 ? ((mainStats.legsWon / totalMainLegs) * 100).toFixed(1) : 0;
         let avgMain = mainStats.avgs.length > 0 ? (mainStats.avgs.reduce((a,b)=>a+b, 0) / mainStats.avgs.length).toFixed(2) : "0.00";
+        
+        // Berechnung: Darts pro gewonnenem Leg
+        let dartsPerLeg = (mainStats.legsWon > 0 && mainStats.totalDartsWonLegs > 0) 
+            ? (mainStats.totalDartsWonLegs / mainStats.legsWon).toFixed(1) 
+            : "-";
 
         let subHtml = "";
         if (!player.isAdmin && subStats.matches > 0) {
@@ -552,6 +573,10 @@
                 <div class="highlight-item">
                     <span>180er</span>
                     <strong>${mainStats.count180}</strong>
+                </div>
+                <div class="highlight-item">
+                    <span>Darts / Leg (Gew.)</span>
+                    <strong>${dartsPerLeg}</strong>
                 </div>
                 <div class="highlight-item">
                     <span>Bestes Short Leg</span>
