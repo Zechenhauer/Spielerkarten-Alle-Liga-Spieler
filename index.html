@@ -149,7 +149,7 @@
             margin-bottom: 24px;
         }
 
-        /* Player-Header mit Flexbox für das Logo rechts */
+        /* Player-Header mit Spielerfoto & Vereinslogo */
         .player-header {
             display: flex;
             justify-content: space-between;
@@ -157,23 +157,40 @@
             border-bottom: 1px solid var(--border-color);
             padding-bottom: 16px;
             margin-bottom: 20px;
+            gap: 10px;
         }
 
         .player-header-info {
             flex: 1;
         }
 
+        .player-images-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-shrink: 0;
+        }
+
+        .card-player-photo {
+            width: 65px;
+            height: 65px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid var(--accent-orange);
+            background: #0f172a;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+        }
+
         .card-player-logo {
-            height: 75px;
+            height: 60px;
             width: auto;
-            max-width: 80px;
+            max-width: 65px;
             object-fit: contain;
-            margin-left: 15px;
             flex-shrink: 0;
         }
 
         .player-name {
-            font-size: 1.6rem;
+            font-size: 1.5rem;
             font-weight: 800;
             margin: 0 0 4px 0;
             letter-spacing: -0.5px;
@@ -373,6 +390,12 @@
         .action-btn:hover { color: var(--text-main); border-color: var(--text-main); background: rgba(255,255,255,0.05); }
         .action-btn.refresh-btn { color: var(--accent-orange); border-color: rgba(245, 158, 11, 0.4); }
         .action-btn.refresh-btn:hover { background: rgba(245, 158, 11, 0.1); border-color: var(--accent-orange); }
+
+        @media (max-width: 500px) {
+            .card-player-photo { width: 50px; height: 50px; }
+            .card-player-logo { height: 45px; }
+            .player-name { font-size: 1.25rem; }
+        }
     </style>
 </head>
 <body>
@@ -428,6 +451,14 @@
 </div>
 
 <script>
+    // ZUORDNUNG DER SPIELERFOTOS
+    const PLAYER_PHOTOS = {
+        "Jürgen Schützendorf": "https://lh3.googleusercontent.com/d/1HUCAxiuHaMPdTz-4l-sEqAw7CRRAwEJX"
+        // Weitere Fotos hier nach dem gleichen Schema eintragen
+    };
+
+    const LOGO_URL = "https://lh3.googleusercontent.com/d/1PB4X2QrrMlaRlajQEWDtJxRP2c6VTsI5";
+
     const playersData = {
         "admin": { name: "Jürgen Schützendorf", mainTeam: "3. Mannschaft", password: "admin", isAdmin: true },
         "juergen_s": { name: "Jürgen Schützendorf", mainTeam: "3. Mannschaft", password: "2807", isAdmin: false },
@@ -682,6 +713,9 @@
         let targetName = player.name;
         let mainTeam = player.mainTeam;
 
+        // Foto-URL bestimmen (Standard ist das Logo, falls kein Foto vorhanden ist)
+        let playerPhotoSrc = PLAYER_PHOTOS[targetName] ? PLAYER_PHOTOS[targetName] : LOGO_URL;
+
         let mainStats = { matches: 0, won: 0, lost: 0, legsWon: 0, legsLost: 0, avgs: [], highFinish: 0, count180: 0, allShortLegs: [], totalDartsWonLegs: 0, s60: 0, s80: 0, s100: 0, s140: 0 };
         let subStats = { teamName: "", matches: 0, won: 0, lost: 0, legsWon: 0, legsLost: 0, avgs: [] };
         
@@ -875,7 +909,10 @@
                     <div class="player-club">TV Kapellen 1919 e.V.</div>
                     <div class="player-meta">Saison 2026/2027 &bull; Stammteam: ${player.mainTeam}</div>
                 </div>
-                <img src="https://lh3.googleusercontent.com/d/1PB4X2QrrMlaRlajQEWDtJxRP2c6VTsI5" alt="TV Kapellen Logo" class="card-player-logo">
+                <div class="player-images-container">
+                    <img src="${playerPhotoSrc}" alt="${player.name}" class="card-player-photo">
+                    <img src="${LOGO_URL}" alt="TV Kapellen Logo" class="card-player-logo">
+                </div>
             </div>
 
             <div class="stats-section">
