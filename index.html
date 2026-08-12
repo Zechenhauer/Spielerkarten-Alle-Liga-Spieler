@@ -459,8 +459,8 @@
 
     const LOGO_URL = "https://lh3.googleusercontent.com/d/1PB4X2QrrMlaRlajQEWDtJxRP2c6VTsI5";
     
-    // SVG Dartscheibe direkt im Code (funktioniert 100% offline & ladesicher)
-    const DEFAULT_AVATAR = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='48' fill='%230f172a' stroke='%23f59e0b' stroke-width='3'/><circle cx='50' cy='50' r='40' fill='none' stroke='%23ef4444' stroke-width='4'/><circle cx='50' cy='50' r='30' fill='none' stroke='%2322c55e' stroke-width='4'/><circle cx='50' cy='50' r='20' fill='none' stroke='%2338bdf8' stroke-width='3'/><circle cx='50' cy='50' r='10' fill='%23ef4444'/><circle cx='50' cy='50' r='4' fill='%23facc15'/><path d='M50 2 L50 98 M2 50 L98 50' stroke='%23334155' stroke-width='1.5'/></svg>";
+    // Google Drive Dartscheibe als Standard-Platzhalter
+    const DEFAULT_AVATAR = "https://lh3.googleusercontent.com/d/13HSvVhqc0AVd8T2cVjfxZ3HoRQIdgt7J";
 
     const playersData = {
         "admin": { name: "Jürgen Schützendorf", mainTeam: "3. Mannschaft", password: "admin", isAdmin: true },
@@ -716,7 +716,7 @@
         let targetName = player.name;
         let mainTeam = player.mainTeam;
 
-        // Foto oder die eingebaute SVG-Dartscheibe
+        // Eigener Schnappschuss oder die Google Drive Dartscheibe als Standard
         let playerPhotoSrc = PLAYER_PHOTOS[targetName] ? PLAYER_PHOTOS[targetName] : DEFAULT_AVATAR;
 
         let mainStats = { matches: 0, won: 0, lost: 0, legsWon: 0, legsLost: 0, avgs: [], highFinish: 0, count180: 0, allShortLegs: [], totalDartsWonLegs: 0, s60: 0, s80: 0, s100: 0, s140: 0 };
