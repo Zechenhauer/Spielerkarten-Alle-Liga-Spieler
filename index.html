@@ -149,7 +149,6 @@
             margin-bottom: 24px;
         }
 
-        /* Player-Header mit Spielerfoto & Vereinslogo */
         .player-header {
             display: flex;
             justify-content: space-between;
@@ -454,10 +453,13 @@
     // ZUORDNUNG DER SPIELERFOTOS
     const PLAYER_PHOTOS = {
         "Jürgen Schützendorf": "https://lh3.googleusercontent.com/d/1HUCAxiuHaMPdTz-4l-sEqAw7CRRAwEJX"
-        // Weitere Fotos hier nach dem gleichen Schema eintragen
+        // Hier weitere Fotos ergänzen, sobald du sie hast:
+        // "Niklas Weichert": "https://lh3.googleusercontent.com/d/...",
     };
 
     const LOGO_URL = "https://lh3.googleusercontent.com/d/1PB4X2QrrMlaRlajQEWDtJxRP2c6VTsI5";
+    // Dartscheibe als Standard-Platzhalter
+    const DEFAULT_AVATAR = "https://cdn-icons-png.flaticon.com/512/3012/3012423.png";
 
     const playersData = {
         "admin": { name: "Jürgen Schützendorf", mainTeam: "3. Mannschaft", password: "admin", isAdmin: true },
@@ -713,8 +715,8 @@
         let targetName = player.name;
         let mainTeam = player.mainTeam;
 
-        // Foto-URL bestimmen (Standard ist das Logo, falls kein Foto vorhanden ist)
-        let playerPhotoSrc = PLAYER_PHOTOS[targetName] ? PLAYER_PHOTOS[targetName] : LOGO_URL;
+        // Eigenes Foto oder Dartscheiben-Platzhalter
+        let playerPhotoSrc = PLAYER_PHOTOS[targetName] ? PLAYER_PHOTOS[targetName] : DEFAULT_AVATAR;
 
         let mainStats = { matches: 0, won: 0, lost: 0, legsWon: 0, legsLost: 0, avgs: [], highFinish: 0, count180: 0, allShortLegs: [], totalDartsWonLegs: 0, s60: 0, s80: 0, s100: 0, s140: 0 };
         let subStats = { teamName: "", matches: 0, won: 0, lost: 0, legsWon: 0, legsLost: 0, avgs: [] };
