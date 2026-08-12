@@ -149,10 +149,27 @@
             margin-bottom: 24px;
         }
 
+        /* Player-Header mit Flexbox für das Logo rechts */
         .player-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
             border-bottom: 1px solid var(--border-color);
             padding-bottom: 16px;
             margin-bottom: 20px;
+        }
+
+        .player-header-info {
+            flex: 1;
+        }
+
+        .card-player-logo {
+            height: 52px;
+            width: auto;
+            max-width: 55px;
+            object-fit: contain;
+            margin-left: 15px;
+            flex-shrink: 0;
         }
 
         .player-name {
@@ -853,9 +870,12 @@
 
         cardDiv.innerHTML = `
             <div class="player-header">
-                <h2 class="player-name">${player.name}</h2>
-                <div class="player-club">TV Kapellen 1919 e.V.</div>
-                <div class="player-meta">Saison 2026/2027 &bull; Stammteam: ${player.mainTeam}</div>
+                <div class="player-header-info">
+                    <h2 class="player-name">${player.name}</h2>
+                    <div class="player-club">TV Kapellen 1919 e.V.</div>
+                    <div class="player-meta">Saison 2026/2027 &bull; Stammteam: ${player.mainTeam}</div>
+                </div>
+                <img src="https://lh3.googleusercontent.com/d/1PB4X2QrrMlaRlajQEWDtJxRP2c6VTsI5" alt="TV Kapellen Logo" class="card-player-logo">
             </div>
 
             <div class="stats-section">
