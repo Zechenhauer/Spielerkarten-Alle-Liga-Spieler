@@ -438,15 +438,10 @@
             </div>
         </div>
 
-        <!-- ADMIN MANNSCHAFTS-FILTER -->
+        <!-- MANNSCHAFTS- FILTERLEISTE (ADMIN & TEAMCAPTAINS) -->
         <div id="adminFilterContainer" class="admin-filter-bar" style="display: none;">
-            <label for="adminTeamFilter">🎯 Ansicht filtern:</label>
+            <label for="adminTeamFilter" id="adminFilterLabel">🎯 Ansicht filtern:</label>
             <select id="adminTeamFilter" class="form-control" style="margin-bottom: 0;" onchange="renderDashboard(sessionStorage.getItem('tvk_logged_in_user'))">
-                <option value="all">Alle Mannschaften anzeigen</option>
-                <option value="1. Mannschaft">1. Mannschaft</option>
-                <option value="2. Mannschaft">2. Mannschaft</option>
-                <option value="3. Mannschaft">3. Mannschaft</option>
-                <option value="4. Mannschaft">4. Mannschaft</option>
             </select>
         </div>
         
@@ -480,49 +475,50 @@
     // Google Drive Dartscheibe als Standard-Platzhalter
     const DEFAULT_AVATAR = "https://lh3.googleusercontent.com/d/1rc673IU4jw2wEE--AIDUS-AfTCmDG9Tw";
 
+    // HIER WURDEN DIE RECHTE FÜR TC (TEAMCAPTAIN) ERWEITERT
     const playersData = {
-        "admin": { name: "Jürgen Schützendorf", mainTeam: "3. Mannschaft", password: "admin", isAdmin: true },
-        "juergen_s": { name: "Jürgen Schützendorf", mainTeam: "3. Mannschaft", password: "2807", isAdmin: false },
-        "weichert_n": { name: "Niklas Weichert", mainTeam: "3. Mannschaft", password: "003", isAdmin: false },
-        "senger_w": { name: "Wolfram Senger", mainTeam: "3. Mannschaft", password: "0003", isAdmin: false },
-        "ludger_s": { name: "Ludger Schledorn", mainTeam: "3. Mannschaft", password: "6767", isAdmin: false },
-        "dominik_h": { name: "Dominik Helmke", mainTeam: "3. Mannschaft", password: "2508", isAdmin: false },
-        "thomas_k": { name: "Thomas Kliver", mainTeam: "3. Mannschaft", password: "0003", isAdmin: false },
-        "markus_g": { name: "Markus Ginsel", mainTeam: "3. Mannschaft", password: "0003", isAdmin: false },
-        "andreas_d": { name: "Andreas Denner", mainTeam: "3. Mannschaft", password: "0003", isAdmin: false },
-        "markus_l": { name: "Markus Lenz", mainTeam: "3. Mannschaft", password: "0003", isAdmin: false },
-        "florian_h": { name: "Florian Hartwich", mainTeam: "3. Mannschaft", password: "0003", isAdmin: false },
-        "michael_m": { name: "Michael Müller", mainTeam: "3. Mannschaft", password: "0003", isAdmin: false },
-        "lars_n": { name: "Lars Neutag", mainTeam: "3. Mannschaft", password: "0003", isAdmin: false },
-        "patrick_s": { name: "Patrick Seitz", mainTeam: "1. Mannschaft", password: "4711", isAdmin: true },
-        "tim_s": { name: "Tim Siegel", mainTeam: "1. Mannschaft", password: "0000", isAdmin: false },
-        "sascha_b": { name: "Sascha Bien", mainTeam: "1. Mannschaft", password: "0001", isAdmin: false },
-        "stefan_m": { name: "Stefan Melcher", mainTeam: "1. Mannschaft", password: "0001", isAdmin: false },
-        "jan_k": { name: "Jan Krabbe", mainTeam: "1. Mannschaft", password: "0001", isAdmin: false },
-        "fabio_p": { name: "Fabio Padovano", mainTeam: "1. Mannschaft", password: "0001", isAdmin: false },
-        "dirk_k": { name: "Dirk Kraus", mainTeam: "1. Mannschaft", password: "0001", isAdmin: false },
-        "robert_g": { name: "Robert Geyer", mainTeam: "1. Mannschaft", password: "0001", isAdmin: false },
-        "joel_w": { name: "Joel Wielinski", mainTeam: "1. Mannschaft", password: "0001", isAdmin: false },
-        "denis_v": { name: "Denis Vanzidler", mainTeam: "1. Mannschaft", password: "0001", isAdmin: false },
-        "daniel_s": { name: "Daniel Simanowitz", mainTeam: "2. Mannschaft", password: "0002", isAdmin: false },
-        "danny_v": { name: "Danny Voß", mainTeam: "2. Mannschaft", password: "0002", isAdmin: false },
-        "markus_e": { name: "Markus Elgersma", mainTeam: "2. Mannschaft", password: "0002", isAdmin: false },
-        "markus_t": { name: "Markus Thiele", mainTeam: "2. Mannschaft", password: "0002", isAdmin: false },
-        "christian_s": { name: "Christian Schreiber", mainTeam: "2. Mannschaft", password: "0002", isAdmin: false },
-        "dominik_herz": { name: "Dominik Herz", mainTeam: "2. Mannschaft", password: "0002", isAdmin: false },
-        "thomas_f": { name: "Thomas Franzen", mainTeam: "2. Mannschaft", password: "0002", isAdmin: false },
-        "philip_m": { name: "Philip Möller", mainTeam: "2. Mannschaft", password: "0002", isAdmin: false },
-        "holger_w": { name: "Holger Weberpold", mainTeam: "2. Mannschaft", password: "0002", isAdmin: false },
-        "britta_r": { name: "Britta Roghmans", mainTeam: "4. Mannschaft", password: "0004", isAdmin: false },
-        "scott_j": { name: "Scott Jonen", mainTeam: "4. Mannschaft", password: "0004", isAdmin: false },
-        "bjoern_m": { name: "Björn Mentzen", mainTeam: "4. Mannschaft", password: "0004", isAdmin: false },
-        "lars_h": { name: "Lars Hufen", mainTeam: "4. Mannschaft", password: "0004", isAdmin: false },
-        "jesper_n": { name: "Jesper Neutag", mainTeam: "4. Mannschaft", password: "0004", isAdmin: false },
-        "brian_m": { name: "Brian Müller", mainTeam: "4. Mannschaft", password: "0004", isAdmin: false },
-        "leon_o": { name: "Leon Overmann", mainTeam: "4. Mannschaft", password: "0004", isAdmin: false },
-        "mark_b": { name: "Mark Bock", mainTeam: "4. Mannschaft", password: "0004", isAdmin: false },
-        "dirk_g": { name: "Dirk Grunert", mainTeam: "4. Mannschaft", password: "0004", isAdmin: false },
-        "lucas_m": { name: "Lucas Mentzen", mainTeam: "4. Mannschaft", password: "0004", isAdmin: false }
+        "admin": { name: "Jürgen Schützendorf", mainTeam: "3. Mannschaft", password: "admin", isAdmin: true, isTC: false },
+        "juergen_s": { name: "Jürgen Schützendorf", mainTeam: "3. Mannschaft", password: "2807", isAdmin: false, isTC: true },
+        "weichert_n": { name: "Niklas Weichert", mainTeam: "3. Mannschaft", password: "003", isAdmin: false, isTC: false },
+        "senger_w": { name: "Wolfram Senger", mainTeam: "3. Mannschaft", password: "0003", isAdmin: false, isTC: false },
+        "ludger_s": { name: "Ludger Schledorn", mainTeam: "3. Mannschaft", password: "6767", isAdmin: false, isTC: false },
+        "dominik_h": { name: "Dominik Helmke", mainTeam: "3. Mannschaft", password: "2508", isAdmin: false, isTC: false },
+        "thomas_k": { name: "Thomas Kliver", mainTeam: "3. Mannschaft", password: "0003", isAdmin: false, isTC: false },
+        "markus_g": { name: "Markus Ginsel", mainTeam: "3. Mannschaft", password: "0003", isAdmin: false, isTC: true },
+        "andreas_d": { name: "Andreas Denner", mainTeam: "3. Mannschaft", password: "0003", isAdmin: false, isTC: false },
+        "markus_l": { name: "Markus Lenz", mainTeam: "3. Mannschaft", password: "0003", isAdmin: false, isTC: false },
+        "florian_h": { name: "Florian Hartwich", mainTeam: "3. Mannschaft", password: "0003", isAdmin: false, isTC: false },
+        "michael_m": { name: "Michael Müller", mainTeam: "3. Mannschaft", password: "0003", isAdmin: false, isTC: false },
+        "lars_n": { name: "Lars Neutag", mainTeam: "3. Mannschaft", password: "0003", isAdmin: false, isTC: false },
+        "patrick_s": { name: "Patrick Seitz", mainTeam: "1. Mannschaft", password: "4711", isAdmin: true, isTC: true },
+        "tim_s": { name: "Tim Siegel", mainTeam: "1. Mannschaft", password: "0000", isAdmin: false, isTC: false },
+        "sascha_b": { name: "Sascha Bien", mainTeam: "1. Mannschaft", password: "0001", isAdmin: false, isTC: false },
+        "stefan_m": { name: "Stefan Melcher", mainTeam: "1. Mannschaft", password: "0001", isAdmin: false, isTC: false },
+        "jan_k": { name: "Jan Krabbe", mainTeam: "1. Mannschaft", password: "0001", isAdmin: false, isTC: false },
+        "fabio_p": { name: "Fabio Padovano", mainTeam: "1. Mannschaft", password: "0001", isAdmin: false, isTC: false },
+        "dirk_k": { name: "Dirk Kraus", mainTeam: "1. Mannschaft", password: "0001", isAdmin: false, isTC: false },
+        "robert_g": { name: "Robert Geyer", mainTeam: "1. Mannschaft", password: "0001", isAdmin: false, isTC: false },
+        "joel_w": { name: "Joel Wielinski", mainTeam: "1. Mannschaft", password: "0001", isAdmin: false, isTC: false },
+        "denis_v": { name: "Denis Vanzidler", mainTeam: "1. Mannschaft", password: "0001", isAdmin: false, isTC: false },
+        "daniel_s": { name: "Daniel Simanowitz", mainTeam: "2. Mannschaft", password: "0002", isAdmin: false, isTC: true }, // Beispiel TC 2. Mannschaft
+        "danny_v": { name: "Danny Voß", mainTeam: "2. Mannschaft", password: "0002", isAdmin: false, isTC: false },
+        "markus_e": { name: "Markus Elgersma", mainTeam: "2. Mannschaft", password: "0002", isAdmin: false, isTC: false },
+        "markus_t": { name: "Markus Thiele", mainTeam: "2. Mannschaft", password: "0002", isAdmin: false, isTC: false },
+        "christian_s": { name: "Christian Schreiber", mainTeam: "2. Mannschaft", password: "0002", isAdmin: false, isTC: false },
+        "dominik_herz": { name: "Dominik Herz", mainTeam: "2. Mannschaft", password: "0002", isAdmin: false, isTC: false },
+        "thomas_f": { name: "Thomas Franzen", mainTeam: "2. Mannschaft", password: "0002", isAdmin: false, isTC: false },
+        "philip_m": { name: "Philip Möller", mainTeam: "2. Mannschaft", password: "0002", isAdmin: false, isTC: false },
+        "holger_w": { name: "Holger Weberpold", mainTeam: "2. Mannschaft", password: "0002", isAdmin: false, isTC: false },
+        "britta_r": { name: "Britta Roghmans", mainTeam: "4. Mannschaft", password: "0004", isAdmin: false, isTC: true }, // Beispiel TC 4. Mannschaft
+        "scott_j": { name: "Scott Jonen", mainTeam: "4. Mannschaft", password: "0004", isAdmin: false, isTC: false },
+        "bjoern_m": { name: "Björn Mentzen", mainTeam: "4. Mannschaft", password: "0004", isAdmin: false, isTC: false },
+        "lars_h": { name: "Lars Hufen", mainTeam: "4. Mannschaft", password: "0004", isAdmin: false, isTC: false },
+        "jesper_n": { name: "Jesper Neutag", mainTeam: "4. Mannschaft", password: "0004", isAdmin: false, isTC: false },
+        "brian_m": { name: "Brian Müller", mainTeam: "4. Mannschaft", password: "0004", isAdmin: false, isTC: false },
+        "leon_o": { name: "Leon Overmann", mainTeam: "4. Mannschaft", password: "0004", isAdmin: false, isTC: false },
+        "mark_b": { name: "Mark Bock", mainTeam: "4. Mannschaft", password: "0004", isAdmin: false, isTC: false },
+        "dirk_g": { name: "Dirk Grunert", mainTeam: "4. Mannschaft", password: "0004", isAdmin: false, isTC: false },
+        "lucas_m": { name: "Lucas Mentzen", mainTeam: "4. Mannschaft", password: "0004", isAdmin: false, isTC: false }
     };
 
     let globalMatchesData = [];
@@ -536,6 +532,7 @@
         if (savedLoginKey && playersData[savedLoginKey]) {
             document.getElementById("loginCard").style.display = "none";
             document.getElementById("dashboardView").style.display = "block";
+            setupFilterDropdown(savedLoginKey);
             renderDashboard(savedLoginKey);
         }
     };
@@ -557,7 +554,7 @@
                 groupPlayers.forEach(([key, player]) => {
                     let option = document.createElement("option");
                     option.value = key;
-                    option.textContent = player.name + (player.isAdmin ? " (Admin)" : "");
+                    option.textContent = player.name + (player.isAdmin ? " (Admin)" : (player.isTC ? " (TC)" : ""));
                     optgroup.appendChild(option);
                 });
                 select.appendChild(optgroup);
@@ -678,10 +675,47 @@
             document.getElementById("loginCard").style.display = "none";
             document.getElementById("dashboardView").style.display = "block";
             
+            setupFilterDropdown(selectedKey);
             renderDashboard(selectedKey);
         } else {
             errorDiv.textContent = "Falsches Passwort!";
             errorDiv.style.display = "block";
+        }
+    }
+
+    function setupFilterDropdown(loggedInKey) {
+        const loggedInPlayer = playersData[loggedInKey];
+        const filterSelect = document.getElementById("adminTeamFilter");
+        const adminFilterContainer = document.getElementById("adminFilterContainer");
+
+        filterSelect.innerHTML = "";
+
+        if (loggedInPlayer.isAdmin) {
+            adminFilterContainer.style.display = "flex";
+            filterSelect.innerHTML = `
+                <option value="all">Alle Mannschaften anzeigen</option>
+                <option value="1. Mannschaft">1. Mannschaft</option>
+                <option value="2. Mannschaft">2. Mannschaft</option>
+                <option value="3. Mannschaft">3. Mannschaft</option>
+                <option value="4. Mannschaft">4. Mannschaft</option>
+            `;
+        } else if (loggedInPlayer.isTC) {
+            adminFilterContainer.style.display = "flex";
+            filterSelect.innerHTML = `
+                <option value="team_all">Alle Spieler der ${loggedInPlayer.mainTeam}</option>
+            `;
+            
+            // Einzelne Spieler des Teams zur Teamauswahl hinzufügen
+            Object.keys(playersData).forEach(key => {
+                if (playersData[key].mainTeam === loggedInPlayer.mainTeam && !playersData[key].isAdmin) {
+                    let opt = document.createElement("option");
+                    opt.value = key;
+                    opt.textContent = "Karte von: " + playersData[key].name;
+                    filterSelect.appendChild(opt);
+                }
+            });
+        } else {
+            adminFilterContainer.style.display = "none";
         }
     }
 
@@ -692,10 +726,11 @@
         const loggedInPlayer = playersData[loggedInKey];
         const titleEl = document.getElementById("dashboardTitle");
         const adminFilterContainer = document.getElementById("adminFilterContainer");
+        const filterSelect = document.getElementById("adminTeamFilter");
 
         if (loggedInPlayer.isAdmin) {
             adminFilterContainer.style.display = "flex";
-            const selectedTeamFilter = document.getElementById("adminTeamFilter").value;
+            const selectedTeamFilter = filterSelect.value;
             
             titleEl.textContent = selectedTeamFilter === "all" 
                 ? "Admin-Dashboard — Alle Mannschaften" 
@@ -722,6 +757,29 @@
                     });
                 }
             });
+        } else if (loggedInPlayer.isTC) {
+            adminFilterContainer.style.display = "flex";
+            const selectedVal = filterSelect.value;
+
+            if (selectedVal === "team_all" || !selectedVal) {
+                titleEl.textContent = `Teamcaptain Ansicht — ${loggedInPlayer.mainTeam}`;
+
+                let sectionTitle = document.createElement("div");
+                sectionTitle.className = "team-section-title";
+                sectionTitle.textContent = `Spielerkarten: ${loggedInPlayer.mainTeam}`;
+                container.appendChild(sectionTitle);
+
+                const teamPlayerKeys = Object.keys(playersData).filter(key => {
+                    return playersData[key].mainTeam === loggedInPlayer.mainTeam && !playersData[key].isAdmin;
+                });
+
+                teamPlayerKeys.forEach(key => {
+                    container.appendChild(createPlayerCardElement(key));
+                });
+            } else {
+                titleEl.textContent = `Spielerkarte — ${playersData[selectedVal].name}`;
+                container.appendChild(createPlayerCardElement(selectedVal));
+            }
         } else {
             adminFilterContainer.style.display = "none";
             titleEl.textContent = "Deine Spielerkarte";
