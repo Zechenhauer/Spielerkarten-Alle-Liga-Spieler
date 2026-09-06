@@ -401,6 +401,7 @@
 <div class="container">
     <div class="app-sync-info">⚡ Datenpflege & Bereitstellung: Jürgen Schützendorf</div>
 
+    <!-- LOGIN FORMULAR -->
     <div id="loginCard" class="login-card">
         <h2>Spieler-Login</h2>
         <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 20px;">Bitte wähle deinen Namen aus und gib dein Passwort ein.</p>
@@ -421,6 +422,7 @@
         <div id="loginError" style="color: var(--red); font-size: 0.8rem; margin-top: 10px; display: none;">Falsches Passwort!</div>
     </div>
 
+    <!-- DASHBOARD ANSICHT -->
     <div id="dashboardView">
         <div class="dashboard-header">
             <h1 id="dashboardTitle">Übersicht</h1>
@@ -430,6 +432,7 @@
             </div>
         </div>
 
+        <!-- MANNSCHAFTS- FILTERLEISTE (ADMIN & TEAMCAPTAINS) -->
         <div id="adminFilterContainer" class="admin-filter-bar" style="display: none;">
             <label for="adminTeamFilter" id="adminFilterLabel">🎯 Ansicht filtern:</label>
             <select id="adminTeamFilter" class="form-control" style="margin-bottom: 0;" onchange="renderDashboard(sessionStorage.getItem('tvk_logged_in_user'))">
@@ -793,14 +796,52 @@
 
         let playerPhotoSrc = PLAYER_PHOTOS[targetName] ? PLAYER_PHOTOS[targetName] : DEFAULT_AVATAR;
 
-        let mainStats = { matches: 0, won: 0, lost: 0, legsWon: 0, legsLost: 0, avgs: [], highFinish: 0, count180: 0, allShortLegs: [], totalDartsWonLegs: 0, s60: 0, s80: 0, s100: 0, s140: 0 };
+        let mainStats = { matches: 0, won: 0, lost: 0, legsWon: 0, legsLost: 0, avgs: [], highFinish: 0, highFinishIsDoppel: false, count180: 0, count180Doppel: 0, allShortLegs: [], totalDartsWonLegs: 0, s60: 0, s80: 0, s100: 0, s140: 0 };
         let subStats = { teamName: "", matches: 0, won: 0, lost: 0, legsWon: 0, legsLost: 0, avgs: [] };
         
         let matchHistory = [];
 
         globalMatchesData.forEach(match => {
-            if (match.block && match.block.toLowerCase().includes('doppel')) return;
+            let isDoppel = match.block && match.block.toLowerCase().includes('doppel');
 
+            if (isDoppel) {
+                let isSubDoppel = (!player.isAdmin && match.mannschaft !== mainTeam);
+                if (!isSubDoppel || player.isAdmin) {
+                    let pairNames = match.spielerKapellen ? match.spielerKapellen.toLowerCase() : "";
+                    let isPlayerInPair = pairNames.includes(targetName.toLowerCase());
+
+                    if (isPlayerInPair) {
+                        // 1. Short Legs aus dem Doppel (mit Flag isDoppel: true markieren)
+                        if (match.darts) {
+                            match.darts.split(",").forEach(dStr => {
+                                let d = parseInt(dStr.trim());
+                                if (!isNaN(d) && d > 0 && d <= 18) {
+                                    mainStats.allShortLegs.push({ darts: d, isDoppel: true });
+                                }
+                            });
+                        }
+
+                        // 2. 180er im Doppel prüfen
+                        if (match.r180er && match.r180er.toLowerCase().includes(targetName.toLowerCase())) {
+                            let match180Val = parseInt(match.r180er) || 1;
+                            mainStats.count180 += match180Val;
+                            mainStats.count180Doppel += match180Val;
+                        }
+
+                        // 3. High Finish im Doppel prüfen
+                        if (match.hf && match.hf.toLowerCase().includes(targetName.toLowerCase())) {
+                            let matchHfVal = parseInt(match.hf) || 0;
+                            if (matchHfVal > mainStats.highFinish) {
+                                mainStats.highFinish = matchHfVal;
+                                mainStats.highFinishIsDoppel = true;
+                            }
+                        }
+                    }
+                }
+                return; // Doppel für Einzelstatistiken überspringen
+            }
+
+            // Normale Einzel-Spiele verarbeiten
             if (match.spielerKapellen === targetName) {
                 let isSub = (!player.isAdmin && match.mannschaft !== mainTeam);
                 let currentStats = isSub ? subStats : mainStats;
@@ -856,7 +897,7 @@
                             if (!isNaN(d) && d > 0) {
                                 matchDartsList.push(d);
                                 if (d <= 18) {
-                                    mainStats.allShortLegs.push(d);
+                                    mainStats.allShortLegs.push({ darts: d, isDoppel: false });
                                 }
                             }
                         });
@@ -870,7 +911,10 @@
 
                     mainStats.count180 += parseInt(match.r180er) || 0;
                     let hf = parseInt(match.hf) || 0;
-                    if (hf > mainStats.highFinish) mainStats.highFinish = hf;
+                    if (hf > mainStats.highFinish) {
+                        mainStats.highFinish = hf;
+                        mainStats.highFinishIsDoppel = false;
+                    }
 
                     mainStats.s60 += parseInt(match.s60) || 0;
                     mainStats.s80 += parseInt(match.s80) || 0;
@@ -880,8 +924,9 @@
             }
         });
 
-        mainStats.allShortLegs.sort((a, b) => a - b);
-        let bestShortLeg = mainStats.allShortLegs.length > 0 ? Math.min(...mainStats.allShortLegs) : 999;
+        // Nach Darts aufsteigend sortieren
+        mainStats.allShortLegs.sort((a, b) => a.darts - b.darts);
+        let bestShortLegVal = mainStats.allShortLegs.length > 0 ? mainStats.allShortLegs[0].darts : 999;
 
         let totalMainLegs = mainStats.legsWon + mainStats.legsLost;
         let legDiff = mainStats.legsWon - mainStats.legsLost;
@@ -899,9 +944,11 @@
         let shortLegsHtml = "-";
         if (mainStats.allShortLegs.length > 0) {
             shortLegsHtml = `<div class="shortlegs-container">` + 
-                mainStats.allShortLegs.map(d => {
-                    let isBest = (d === bestShortLeg);
-                    return `<span class="shortleg-badge ${isBest ? 'best-shortleg' : ''}">${d}</span>`;
+                mainStats.allShortLegs.map(item => {
+                    let isBest = (item.darts === bestShortLegVal);
+                    let displayLabel = item.darts + (item.isDoppel ? '<span style="font-size:0.65rem; opacity:0.8;">[D]</span>' : '');
+                    let titleAttr = item.isDoppel ? ' title="Aus Doppel-Spiel"' : '';
+                    return `<span class="shortleg-badge ${isBest ? 'best-shortleg' : ''}"${titleAttr}>${displayLabel}</span>`;
                 }).join('') + 
                 `</div>`;
         }
@@ -924,26 +971,19 @@
         if (matchHistory.length > 0) {
             let validGames = matchHistory.filter(m => m.avg > 0);
             if (validGames.length > 0) {
-                
-                // === BESTES SPIEL LOGIK: Priorität GEWONNEN (Sieg), dann höchster Average ===
                 let bestCandidates = [...validGames].sort((a, b) => {
                     let aWon = a.ownLegs > a.oppLegs;
                     let bWon = b.ownLegs > b.oppLegs;
-                    if (aWon !== bWon) {
-                        return aWon ? -1 : 1; // Gewonnenes Spiel gewinnt immer gegen Verlorenes
-                    }
-                    return b.avg - a.avg; // Bei gleichem Status entscheidet der höhere Average
+                    if (aWon !== bWon) return aWon ? -1 : 1;
+                    return b.avg - a.avg;
                 });
                 let best = bestCandidates[0];
 
-                // === SCHWÄCHSTES SPIEL LOGIK: Priorität VERLOREN (Niederlage), dann niedrigster Average ===
                 let worstCandidates = [...validGames].sort((a, b) => {
                     let aLost = a.ownLegs < a.oppLegs;
                     let bLost = b.ownLegs < b.oppLegs;
-                    if (aLost !== bLost) {
-                        return aLost ? -1 : 1; // Verlorenes Spiel wird immer zuerst als Flop gewertet
-                    }
-                    return a.avg - b.avg; // Bei gleichem Status entscheidet der niedrigste Average
+                    if (aLost !== bLost) return aLost ? -1 : 1;
+                    return a.avg - b.avg;
                 });
                 let worst = worstCandidates[0];
 
@@ -986,6 +1026,16 @@
                         </div>
                     </div>
                 </div>`;
+        }
+
+        let hfDisplay = "-";
+        if (mainStats.highFinish > 0) {
+            hfDisplay = mainStats.highFinish + (mainStats.highFinishIsDoppel ? ' <span style="font-size:0.75rem; color:var(--text-muted);" title="Aus Doppel-Spiel">[D]</span>' : '');
+        }
+
+        let count180Display = mainStats.count180;
+        if (mainStats.count180Doppel > 0) {
+            count180Display += ` <span style="font-size:0.7rem; color:var(--text-muted);" title="${mainStats.count180Doppel} aus Doppel">[D:${mainStats.count180Doppel}]</span>`;
         }
 
         cardDiv.innerHTML = `
@@ -1047,11 +1097,11 @@
             <div class="highlights-box">
                 <div class="highlight-item">
                     <span>High-Finish</span>
-                    <strong>${mainStats.highFinish > 0 ? mainStats.highFinish : "-"}</strong>
+                    <strong>${hfDisplay}</strong>
                 </div>
                 <div class="highlight-item">
                     <span>180er</span>
-                    <strong>${mainStats.count180}</strong>
+                    <strong>${count180Display}</strong>
                 </div>
                 <div class="highlight-item">
                     <span>Darts / Leg (Gew.)</span>
