@@ -497,11 +497,12 @@
         "Jürgen Schützendorf": "3. Mannschaft", "Niklas Weichert": "3. Mannschaft", "Wolfram Senger": "3. Mannschaft", "Ludger Schledorn": "3. Mannschaft",
         "Thomas Kliver": "3. Mannschaft", "Markus Ginsel": "3. Mannschaft", "Andreas Denner": "3. Mannschaft", "Markus Lenz": "3. Mannschaft",
         "Florian Hartwich": "3. Mannschaft", "Michael Müller": "3. Mannschaft", "Lars Neutag": "3. Mannschaft", "Yannick Steffes": "3. Mannschaft",
-        "Leon Gerber": "3. Mannschaft", "Gregor Marek": "3. Mannschaft", "Holger Overmeyer": "3. Mannschaft",
+        "Leon Gerber": "3. Mannschaft", "Gregor Marek": "3. Mannschaft",
         
         "Britta Roghmans": "4. Mannschaft", "Scott Jonen": "4. Mannschaft", "Björn Mentzen": "4. Mannschaft", "Lars Hufen": "4. Mannschaft",
         "Jesper Neutag": "4. Mannschaft", "Brian Müller": "4. Mannschaft", "Leon Overmann": "4. Mannschaft", "Mark Bock": "4. Mannschaft",
         "Dirk Grunert": "4. Mannschaft", "Friedhelm Schmidt-Cremer": "4. Mannschaft", "Lucas Mentzen": "4. Mannschaft"
+        // Holger Overmeyer bewusst hier entfernt, da neutral!
     };
 
     const playersData = {
@@ -553,7 +554,7 @@
         "dirk_g": { name: "Dirk Grunert", mainTeam: "4. Mannschaft", password: "0004", isAdmin: false, isTC: false },
         "friedhelm_s": { name: "Friedhelm Schmidt-Cremer", mainTeam: "4. Mannschaft", password: "0004", isAdmin: false, isTC: false },
         "lucas_m": { name: "Lucas Mentzen", mainTeam: "4. Mannschaft", password: "0004", isAdmin: false, isTC: false },
-        "holger_o": { name: "Holger Overmeyer", mainTeam: "3. Mannschaft", password: "1921", isAdmin: true, isTC: false }
+        "holger_o": { name: "Holger Overmeyer", mainTeam: "Neutral / Beobachter", password: "1921", isAdmin: true, isTC: false }
     };
 
     let globalMatchesData = [];
@@ -575,17 +576,18 @@
     function populatePlayerDropdown() {
         const select = document.getElementById("playerSelect");
         select.innerHTML = '<option value="">-- Bitte wählen --</option>';
-        const teams = ["1. Mannschaft", "2. Mannschaft", "3. Mannschaft", "4. Mannschaft", "Admin"];
+        const teams = ["1. Mannschaft", "2. Mannschaft", "3. Mannschaft", "4. Mannschaft", "Neutral / Beobachter", "Admin"];
         
         teams.forEach(teamName => {
             const groupPlayers = Object.entries(playersData).filter(([key, p]) => {
-                if (teamName === "Admin") return p.isAdmin;
+                if (teamName === "Neutral / Beobachter") return p.mainTeam === "Neutral / Beobachter";
+                if (teamName === "Admin") return p.isAdmin && p.mainTeam !== "Neutral / Beobachter";
                 return p.mainTeam === teamName && !p.isAdmin;
             });
 
             if (groupPlayers.length > 0) {
                 let optgroup = document.createElement("optgroup");
-                optgroup.label = teamName === "Admin" ? "Administration" : teamName;
+                optgroup.label = teamName === "Neutral / Beobachter" ? "Neutraler Beobachter" : (teamName === "Admin" ? "Administration" : teamName);
                 groupPlayers.forEach(([key, player]) => {
                     let option = document.createElement("option");
                     option.value = key;
@@ -676,7 +678,7 @@
 
         const player = playersData[selectedKey];
         
-        if (passwordInput === player.password || (player.isAdmin && passwordInput === "admin")) {
+        if (passwordInput === player.password || (player.isAdmin && passwordInput === "admin") || (player.isAdmin && passwordInput === "1921")) {
             errorDiv.style.display = "none";
             sessionStorage.setItem("tvk_logged_in_user", selectedKey);
 
@@ -735,7 +737,7 @@
         const adminFilterContainer = document.getElementById("adminFilterContainer");
         const filterSelect = document.getElementById("adminTeamFilter");
 
-        if (loggedInPlayer.isAdmin) {
+        if (loggedInPlayer.isAdmin && loggedInPlayer.mainTeam !== "Neutral / Beobachter") {
             adminFilterContainer.style.display = "flex";
             const selectedTeamFilter = filterSelect.value;
             
@@ -749,7 +751,36 @@
                 if (selectedTeamFilter !== "all" && selectedTeamFilter !== teamName) return;
 
                 const teamPlayerKeys = Object.keys(playersData).filter(key => {
-                    if (key === "admin") return false;
+                    if (key === "admin" || key === "holger_o") return false;
+                    return playersData[key].mainTeam === teamName;
+                });
+
+                if (teamPlayerKeys.length > 0) {
+                    let sectionTitle = document.createElement("div");
+                    sectionTitle.className = "team-section-title";
+                    sectionTitle.textContent = teamName;
+                    container.appendChild(sectionTitle);
+
+                    teamPlayerKeys.forEach(key => {
+                        container.appendChild(createPlayerCardElement(key));
+                    });
+                }
+            });
+        } else if (loggedInPlayer.mainTeam === "Neutral / Beobachter") {
+            // Holger Overmeyer Ansicht als neutraler Beobachter
+            adminFilterContainer.style.display = "flex";
+            const selectedTeamFilter = filterSelect.value;
+
+            titleEl.textContent = selectedTeamFilter === "all" 
+                ? "Beobachter-Ansicht — Alle Mannschaften" 
+                : `Beobachter-Ansicht — ${selectedTeamFilter}`;
+
+            const teamOrder = ["1. Mannschaft", "2. Mannschaft", "3. Mannschaft", "4. Mannschaft"];
+            
+            teamOrder.forEach(teamName => {
+                if (selectedTeamFilter !== "all" && selectedTeamFilter !== teamName) return;
+
+                const teamPlayerKeys = Object.keys(playersData).filter(key => {
                     return playersData[key].mainTeam === teamName;
                 });
 
@@ -814,12 +845,10 @@
         globalMatchesData.forEach(match => {
             let isDoppel = match.block && match.block.toLowerCase().includes('doppel');
 
-            // Doppel-Spiele werden vollständig ignoriert
             if (isDoppel) {
                 return;
             }
 
-            // Einzel-Spiele
             if (match.spielerKapellen === targetName) {
                 let actualTeam = PLAYER_TEAM_MAP[targetName] || mainTeam;
                 let isSub = match.mannschaft !== actualTeam;
@@ -1007,14 +1036,14 @@
             `;
         }
 
-        let displayTeam = PLAYER_TEAM_MAP[targetName] || mainTeam;
+        let displayTeam = PLAYER_TEAM_MAP[targetName] || (player.mainTeam === "Neutral / Beobachter" ? "Neutraler Beobachter" : player.mainTeam);
 
         cardDiv.innerHTML = `
             <div class="player-header">
                 <div class="player-header-info">
                     <h2 class="player-name">${player.name}</h2>
                     <div class="player-club">TV Kapellen 1919 e.V.</div>
-                    <div class="player-meta">Saison 2026/2027 • Stammteam: ${displayTeam}</div>
+                    <div class="player-meta">Saison 2026/2027 • Status: ${displayTeam}</div>
                 </div>
                 <div class="player-images-container">
                     <img src="${playerPhotoSrc}" alt="${player.name}" class="card-player-photo" onerror="this.onerror=null; this.src=DEFAULT_AVATAR;">
